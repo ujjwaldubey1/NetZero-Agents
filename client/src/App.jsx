@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { AnimatePresence } from 'framer-motion';
@@ -27,12 +27,18 @@ const Protected = ({ children, roles }) => {
   return children;
 };
 
+import CustomCursor from './components/CustomCursor';
+import BootLoader from './components/BootLoader';
+
 const App = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const [booted, setBooted] = useState(false);
 
   return (
     <Box minHeight="100vh" position="relative">
+      {!booted && <BootLoader onComplete={() => setBooted(true)} />}
+      <CustomCursor />
       {user && location.pathname !== '/' && <NavBar />}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
