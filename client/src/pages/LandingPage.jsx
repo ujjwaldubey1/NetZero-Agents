@@ -24,7 +24,7 @@ const CoverPage = () => {
 
   useEffect(() => {
     if (!coverRef.current || !contentRef.current) return;
-    
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
@@ -39,7 +39,7 @@ const CoverPage = () => {
       scrub: 1,
       onUpdate: (self) => {
         const progress = self.progress;
-        
+
         // Shatter transformations
         const scale = 1 + (progress * 0.5);
         const rotation = progress * 20;
@@ -47,7 +47,7 @@ const CoverPage = () => {
         const blur = progress * 20;
         const opacity = 1 - progress;
         const y = progress * -150;
-        
+
         gsap.set(content, {
           scale: scale,
           rotation: rotation,
@@ -97,7 +97,11 @@ const CoverPage = () => {
           alignItems: 'center',
           justifyContent: 'center',
           transformStyle: 'preserve-3d',
-          background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
+          background: `
+            radial-gradient(circle at 50% 50%, transparent 0%, transparent 20%, rgba(0, 240, 255, 0.05) 20%, rgba(0, 240, 255, 0.05) 21%, transparent 21%),
+            radial-gradient(circle at 50% 50%, transparent 0%, transparent 40%, rgba(255, 0, 85, 0.05) 40%, rgba(255, 0, 85, 0.05) 41%, transparent 41%),
+            linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)
+          `,
         }}
       >
         {/* Decorative Halftone Pattern */}
@@ -133,7 +137,7 @@ const CoverPage = () => {
             >
               CARDANO
             </Typography>
-            
+
             {/* Red Channel Offset */}
             <Typography
               variant="h1"
@@ -163,7 +167,7 @@ const CoverPage = () => {
             >
               CARDANO
             </Typography>
-            
+
             {/* Cyan Channel Offset */}
             <Typography
               variant="h1"
@@ -193,7 +197,7 @@ const CoverPage = () => {
             >
               CARDANO
             </Typography>
-            
+
             {/* Yellow Accent Offset */}
             <Typography
               variant="h1"
@@ -223,7 +227,7 @@ const CoverPage = () => {
               CARDANO
             </Typography>
           </Box>
-          
+
           <Typography
             variant="h2"
             sx={{
@@ -256,7 +260,7 @@ const CoverPage = () => {
             >
               Transforming data center carbon compliance from fragmented chaos into streamlined, blockchain-verified certainty.
             </Typography>
-            
+
             {/* Scanline overlay */}
             <Box
               sx={{
@@ -306,11 +310,11 @@ const CoverPage = () => {
 };
 
 // Hand-drawn Manga Page Component with Shatter Effect
-const MangaChapter = ({ 
-  chapterNumber, 
-  title, 
-  subtitle, 
-  children, 
+const MangaChapter = ({
+  chapterNumber,
+  title,
+  subtitle,
+  children,
   direction = 'right',
   bgColor = '#ffffff',
   textColor = '#0a0a0a',
@@ -321,13 +325,13 @@ const MangaChapter = ({
 
   useEffect(() => {
     if (!chapterRef.current || !pageRef.current) return;
-    
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
     const chapter = chapterRef.current;
     const page = pageRef.current;
-    
+
     // Find the next chapter to control its visibility
     const nextChapter = document.querySelector(`.chapter-${chapterNumber + 1} .manga-page-frame`);
 
@@ -340,7 +344,7 @@ const MangaChapter = ({
       scrub: 1,
       onUpdate: (self) => {
         const progress = self.progress;
-        
+
         // Shatter transformations for current page
         const scale = 1 + (progress * 0.3); // Scale up
         const rotation = progress * 15; // Rotate slightly
@@ -348,7 +352,7 @@ const MangaChapter = ({
         const blur = progress * 15; // Blur effect
         const opacity = 1 - progress; // Fade out
         const y = progress * -100; // Move up
-        
+
         gsap.set(page, {
           scale: scale,
           rotation: rotation,
@@ -357,7 +361,7 @@ const MangaChapter = ({
           opacity: opacity,
           y: y,
         });
-        
+
         // Fade in the next chapter early (at 40% progress) for cinematic effect
         if (nextChapter) {
           const nextOpacity = progress > 0.4 ? (progress - 0.4) / 0.6 : 0;
@@ -459,10 +463,10 @@ const MangaChapter = ({
             >
               CHAPTER {chapterNumber}
             </Typography>
-            <Typography 
+            <Typography
               variant="h1"
-              sx={{ 
-                fontFamily: '"Bebas Neue", sans-serif', 
+              sx={{
+                fontFamily: '"Bebas Neue", sans-serif',
                 fontSize: { xs: '2.5rem', sm: '3.5rem', md: '6rem' },
                 color: textColor,
                 textShadow: textColor === '#0a0a0a' ? '5px 5px 0px #00f0ff' : '5px 5px 0px #0a0a0a',
@@ -500,8 +504,8 @@ const MangaChapter = ({
 };
 
 // New Manga Card Component (Replaces SlantedPanel)
-const MangaCard = ({ 
-  children, 
+const MangaCard = ({
+  children,
   className = '',
   variant = 'cut', // 'cut', 'tech', 'rect'
   bgColor = '#fff',
@@ -533,7 +537,7 @@ const MangaCard = ({
       }
       gsap.delayedCall(0.5 + Math.random() * 1.5, randomLoop); // Check again in 0.5-2 seconds
     };
-    
+
     gsap.delayedCall(0.5, randomLoop); // Start after 0.5 seconds
 
     return () => {
@@ -601,41 +605,41 @@ const LandingPage = () => {
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
 
   return (
-    <Box 
+    <Box
       ref={containerRef}
-      sx={{ 
-        minHeight: '100vh', 
-        bgcolor: '#1a1a1a', 
+      sx={{
+        minHeight: '100vh',
+        bgcolor: '#1a1a1a',
         position: 'relative',
         overflowX: 'hidden',
       }}
     >
       {/* Fixed Background */}
-      <Box 
-        sx={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          width: '100%', 
-          height: '100vh', 
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100vh',
           zIndex: 0,
           pointerEvents: 'none'
         }}
       >
-        <motion.div 
-          style={{ 
-            width: '100%', 
-            height: '100%', 
+        <motion.div
+          style={{
+            width: '100%',
+            height: '100%',
             backgroundImage: `url(${BG_IMG})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             y: bgY,
             scale: bgScale,
             filter: 'grayscale(100%) contrast(120%) brightness(0.4)', // Darkened for content pop
-          }} 
+          }}
         />
         {/* Speed Lines Overlay */}
-        <Box 
+        <Box
           sx={{
             position: 'absolute',
             top: 0,
@@ -650,10 +654,10 @@ const LandingPage = () => {
 
       {/* Content Container - Natural Scroll */}
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        
+
         {/* COVER PAGE */}
         <CoverPage />
-        
+
         {/* CHAPTER 1: THE PROBLEM */}
         <MangaChapter
           chapterNumber={1}
@@ -755,11 +759,11 @@ const LandingPage = () => {
               { title: 'BLOCKCHAIN TRACEABILITY', desc: 'For audit and trust', color: '#0a0a0a', text: '#fff' },
             ].map((item, i) => (
               <Grid item xs={12} md={6} key={i}>
-                <MangaCard 
-                  variant="tech" 
-                  delay={0.6 + i * 0.1} 
-                  bgColor={item.color} 
-                  borderColor="#0a0a0a" 
+                <MangaCard
+                  variant="tech"
+                  delay={0.6 + i * 0.1}
+                  bgColor={item.color}
+                  borderColor="#0a0a0a"
                   shadowColor="#0a0a0a"
                 >
                   <Typography variant="h5" gutterBottom sx={{ fontFamily: '"Bebas Neue", sans-serif', color: item.text || '#0a0a0a' }}>
@@ -841,11 +845,11 @@ const LandingPage = () => {
               },
             ].map((feature, i) => (
               <Grid item xs={12} md={6} key={i}>
-                <MangaCard 
-                  variant="cut" 
-                  delay={i * 0.1} 
-                  bgColor={feature.color} 
-                  borderColor="#0a0a0a" 
+                <MangaCard
+                  variant="cut"
+                  delay={i * 0.1}
+                  bgColor={feature.color}
+                  borderColor="#0a0a0a"
                   shadowColor="#0a0a0a"
                 >
                   <Typography
@@ -916,11 +920,11 @@ const LandingPage = () => {
               },
             ].map((stack, i) => (
               <Grid item xs={12} md={6} key={i}>
-                <MangaCard 
-                  variant="tech" 
-                  delay={i * 0.15} 
-                  bgColor={stack.color} 
-                  borderColor="#0a0a0a" 
+                <MangaCard
+                  variant="tech"
+                  delay={i * 0.15}
+                  bgColor={stack.color}
+                  borderColor="#0a0a0a"
                   shadowColor="#0a0a0a"
                 >
                   <Typography variant="h4" gutterBottom sx={{ fontFamily: '"Bebas Neue", sans-serif', mb: 3, color: stack.text || '#0a0a0a' }}>
@@ -1075,11 +1079,11 @@ const LandingPage = () => {
               },
             ].map((member, i) => (
               <Grid item xs={12} md={6} key={i}>
-                <MangaCard 
-                  variant="tech" 
-                  delay={i * 0.15} 
-                  bgColor={member.color} 
-                  borderColor="#0a0a0a" 
+                <MangaCard
+                  variant="tech"
+                  delay={i * 0.15}
+                  bgColor={member.color}
+                  borderColor="#0a0a0a"
                   shadowColor="#0a0a0a"
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
@@ -1106,7 +1110,7 @@ const LandingPage = () => {
                       </Typography>
                       <Typography variant="h6" sx={{ fontFamily: '"Bebas Neue", sans-serif', opacity: 0.8, color: member.text || '#0a0a0a' }}>
                         {member.subtitle}
-                  </Typography>
+                      </Typography>
                     </Box>
                   </Box>
                   <Typography variant="body1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1.1rem', color: member.text || '#0a0a0a' }}>
@@ -1131,7 +1135,7 @@ const LandingPage = () => {
               <Typography
                 variant="h2"
                 gutterBottom
-            sx={{
+                sx={{
                   fontFamily: '"Bebas Neue", sans-serif',
                   color: '#0a0a0a',
                   mb: 3,
@@ -1150,19 +1154,19 @@ const LandingPage = () => {
               >
                 Transform your ESG compliance from a manual nightmare into an automated pipeline. Join operators and vendors already using NetZero Agents.
               </Typography>
-            <Button
-              component={Link}
-              to="/login"
-              size="large"
-              sx={{
+              <Button
+                component={Link}
+                to="/login"
+                size="large"
+                sx={{
                   fontSize: '2.5rem',
                   px: 8,
                   py: 2,
-                bgcolor: '#00f0ff',
-                color: '#0a0a0a',
+                  bgcolor: '#00f0ff',
+                  color: '#0a0a0a',
                   border: '4px solid #0a0a0a',
-                boxShadow: '10px 10px 0px #0a0a0a',
-                borderRadius: 0,
+                  boxShadow: '10px 10px 0px #0a0a0a',
+                  borderRadius: 0,
                   fontFamily: '"Bebas Neue", sans-serif',
                   letterSpacing: '2px',
                   position: 'relative',
@@ -1177,7 +1181,7 @@ const LandingPage = () => {
                 }}
               >
                 START THE ENGINE
-            </Button>
+              </Button>
             </MangaCard>
           </Box>
         </MangaChapter>

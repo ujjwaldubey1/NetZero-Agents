@@ -174,21 +174,29 @@ const ChainExplorerPage = () => {
   }, []);
 
   return (
-    <MemeLayout title="AUDIT TRAIL" subtitle="Local ledger + on-chain tx references.">
+    <MemeLayout
+      title="AUDIT TRAIL"
+      subtitle="Local ledger + on-chain tx references."
+      bgPattern={`
+        linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 70%)
+      `}
+    >
       {error && <Alert severity="error" sx={{ mt: 2, bgcolor: '#ff0055', color: '#fff', border: '2px solid #0a0a0a' }}>{error}</Alert>}
       <Box sx={{ mt: 4, border: '3px solid #0a0a0a', p: 2, bgcolor: '#fff', boxShadow: '5px 5px 0px #0a0a0a', position: 'relative', overflow: 'visible' }}>
-        <Box 
-          component="img" 
-          src={ASSETS.SIDEKICK_AI} 
-          sx={{ 
-            position: 'absolute', 
-            top: -40, 
-            right: -10, 
-            width: 90, 
-            transform: 'rotate(10deg)', 
+        <Box
+          component="img"
+          src={ASSETS.SIDEKICK_AI}
+          sx={{
+            position: 'absolute',
+            top: -40,
+            right: -10,
+            width: 90,
+            transform: 'rotate(10deg)',
             zIndex: 10,
             filter: 'drop-shadow(5px 5px 0px rgba(0,0,0,0.2))'
-          }} 
+          }}
         />
         <BlockchainVisualization events={events} />
       </Box>

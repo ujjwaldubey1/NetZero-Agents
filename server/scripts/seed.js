@@ -8,16 +8,16 @@ import { computeTotals } from '../utils/emissionFactors.js';
 
 dotenv.config();
 
-const { MONGO_URI } = process.env;
-if (!MONGO_URI) {
-  console.error('Please set MONGO_URI in .env before seeding.');
+const { MONGODB_URI } = process.env;
+if (!MONGODB_URI) {
+  console.error('Please set MONGODB_URI in .env before seeding.');
   process.exit(1);
 }
 
 const period = '2025-Q4';
 
 const seed = async () => {
-  await mongoose.connect(MONGO_URI);
+  await mongoose.connect(MONGODB_URI);
   console.log('Connected to MongoDB');
 
   // Admin/operator
