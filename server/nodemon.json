@@ -2,15 +2,20 @@
   "watch": [
     "index.js",
     "routes",
+    "controllers",
     "config",
     "middleware",
     "models",
     "services",
-    "utils"
+    "utils",
+    "blockchain",
+    "zk"
   ],
   "ignore": [
     "node_modules",
-    "uploads"
+    "uploads",
+    "zk/build",
+    "zk/proofs"
   ],
   "ext": "js,json",
   "exec": "node index.js"

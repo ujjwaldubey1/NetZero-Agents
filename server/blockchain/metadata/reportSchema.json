@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "NetZero Report NFT Metadata Schema",
+  "description": "CIP-68 compliant metadata schema for NetZero Report NFTs",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Report name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Report description"
+    },
+    "image": {
+      "type": "string",
+      "description": "IPFS hash or URL to report image/visualization"
+    },
+    "attributes": {
+      "type": "array",
+      "description": "NFT attributes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trait_type": {
+            "type": "string"
+          },
+          "value": {
+            "type": ["string", "number"]
+          }
+        }
+      }
+    },
+    "100": {
+      "type": "object",
+      "description": "CIP-68 reference metadata",
+      "properties": {
+        "period": {
+          "type": "string",
+          "description": "Report period (e.g., 2025-Q4)"
+        },
+        "reportHash": {
+          "type": "string",
+          "description": "SHA-256 hash of the report data"
+        },
+        "orgDid": {
+          "type": "string",
+          "description": "Organization DID"
+        },
+        "scopeTotals": {
+          "type": "object",
+          "properties": {
+            "scope1": {
+              "type": "object"
+            },
+            "scope2": {
+              "type": "object"
+            },
+            "scope3": {
+              "type": "object"
+            }
+          }
+        },
+        "zkProofId": {
+          "type": ["string", "null"],
+          "description": "ZK proof ID if available"
+        }
+      },
+      "required": ["period", "reportHash", "orgDid"]
+    }
+  },
+  "required": ["name", "description", "100"]
+}
+

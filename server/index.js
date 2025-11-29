@@ -6,17 +6,31 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import connectDb from './config/db.js';
-import authRoutes from './routes/auth.js';
+import { errorHandler } from './middleware/errorHandler.js';
+
+// New route structure
+import authRoutes from './routes/auth.routes.js';
+import vendorRoutes from './routes/vendor.routes.js';
+import reportRoutes from './routes/report.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
+import zkRoutes from './routes/zk.routes.js';
+import blockchainRoutes from './routes/blockchain.routes.js';
+
+// Legacy routes (kept for backwards compatibility)
 import emissionRoutes from './routes/emissions.js';
-import vendorRoutes from './routes/vendor.js';
-import reportRoutes from './routes/reports.js';
 import certificateRoutes from './routes/certificates.js';
-import zkRoutes from './routes/zk.js';
 import ledgerRoutes from './routes/ledger.js';
 import miscRoutes from './routes/misc.js';
 import userRoutes from './routes/user.js';
 import adminRoutes from './routes/admin.js';
 import dataCenterRoutes from './routes/datacenters.js';
+
+// Legacy route files (for backwards compatibility - keep old routes working)
+import vendorRoutesLegacy from './routes/vendor.js';
+import zkRoutesLegacy from './routes/zk.js';
+import reportsRoutesLegacy from './routes/reports.js';
+import authRoutesLegacy from './routes/auth.js';
+
 import { ensureZkArtifacts } from './services/zkService.js';
 import { startReminderAgent } from './services/scheduler.js';
 
@@ -52,12 +66,17 @@ app.get('/', (_req, res) => {
   res.json({ status: 'NetZero Agents API', health: 'ok' });
 });
 
+// New route structure
 app.use('/api/auth', authRoutes);
-app.use('/api/emissions', emissionRoutes(upload));
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/certificates', certificateRoutes);
+app.use('/api/upload', uploadRoutes(upload));
 app.use('/api/zk', zkRoutes);
+app.use('/api/blockchain', blockchainRoutes);
+
+// Legacy routes (maintained for backwards compatibility)
+app.use('/api/emissions', emissionRoutes(upload));
+app.use('/api/certificates', certificateRoutes);
 app.use('/api/ledger', ledgerRoutes);
 app.use('/api', miscRoutes);
 app.use('/api', userRoutes);
@@ -67,6 +86,9 @@ app.use('/api/datacenters', dataCenterRoutes);
 app.use('/api/operator/datacenters', dataCenterRoutes);
 app.use('/api/vendor/datacenters', dataCenterRoutes);
 app.use('/api/staff/datacenters', dataCenterRoutes);
+
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
 // Ensure zk artifacts exist (non-blocking)
 ensureZkArtifacts().catch((err) => {
