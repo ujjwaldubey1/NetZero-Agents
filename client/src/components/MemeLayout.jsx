@@ -18,19 +18,29 @@ const MemeLayout = ({ children, title, subtitle }) => {
       }}
     >
       {/* Interactive Foreground Memes */}
-      <Box sx={{ position: 'fixed', bottom: 0, right: 20, zIndex: 10, pointerEvents: 'none' }}>
+      <Box
+        component={motion.div}
+        initial="rest"
+        animate="rest"
+        whileHover="hover"
+        sx={{ position: 'fixed', bottom: 0, right: 20, zIndex: 10, pointerEvents: 'auto', p: 4 }}
+      >
         <motion.img
           src={ASSETS.HERO_DEV}
           alt="Hero Dev"
           style={{ width: '200px', height: 'auto', display: 'block' }}
-          initial={{ y: 200 }}
-          animate={{ y: 0 }}
-          transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.5 }}
+          variants={{
+            rest: { x: 0, y: 0, opacity: 1, scale: 1 },
+            hover: { x: 220, y: 140, opacity: 0.3, scale: 0.5 },
+          }}
+          transition={{ type: 'spring', stiffness: 160, damping: 20 }}
         />
         <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.5 }}
+          variants={{
+            rest: { x: 0, opacity: 1, scale: 1 },
+            hover: { x: 220, opacity: 0.3, scale: 0.7 },
+          }}
+          transition={{ type: 'spring', stiffness: 180, damping: 22 }}
           style={{
             position: 'absolute',
             top: -60,
@@ -48,14 +58,22 @@ const MemeLayout = ({ children, title, subtitle }) => {
         </motion.div>
       </Box>
 
-      <Box sx={{ position: 'fixed', bottom: 0, left: 20, zIndex: 9, pointerEvents: 'none', display: { xs: 'none', md: 'block' } }}>
+      <Box
+        component={motion.div}
+        initial="rest"
+        animate="rest"
+        whileHover="hover"
+        sx={{ position: 'fixed', bottom: 0, left: 20, zIndex: 9, pointerEvents: 'auto', display: { xs: 'none', md: 'block' }, p: 4 }}
+      >
         <motion.img
-          src={ASSETS.VILLAIN_BUG}
+          src={ASSETS.SNAKE_MEME}
           alt="Villain Bug"
           style={{ width: '150px', height: 'auto', display: 'block', transform: 'scaleX(-1)' }}
-          initial={{ x: -200 }}
-          animate={{ x: 0 }}
-          transition={{ type: 'spring', stiffness: 80, damping: 20, delay: 2 }}
+          variants={{
+            rest: { x: 0, y: 0, opacity: 1, scale: 1 },
+            hover: { x: -220, y: -140, opacity: 0.3, scale: 0.5 },
+          }}
+          transition={{ type: 'spring', stiffness: 160, damping: 20 }}
         />
       </Box>
 

@@ -179,7 +179,7 @@ const ChainExplorerPage = () => {
       <Box sx={{ mt: 4, border: '3px solid #0a0a0a', p: 2, bgcolor: '#fff', boxShadow: '5px 5px 0px #0a0a0a', position: 'relative', overflow: 'visible' }}>
         <Box 
           component="img" 
-          src={ASSETS.SIDEKICK_AI} 
+          src={ASSETS.FROGGY_MEME} 
           sx={{ 
             position: 'absolute', 
             top: -40, 

@@ -29,6 +29,9 @@ export const ASSETS = {
   ANIME_IRONMAN: '/assets/anime_ironman.jpg',
   ANIME_ROBOT: '/assets/anime_robot.jpg',
   CARDANO_MEME: '/assets/cardano_logo.png',
+  HOSKY_MEME: '/assets/Hosky.webp',
+  SNAKE_MEME:'/assets/snake_meme.webp',
+  FROGGY_MEME:'/assets/froggy.jpeg',
 };
 
 export default ASSETS;
