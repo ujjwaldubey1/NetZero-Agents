@@ -14,6 +14,24 @@
       "key": "token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "datacenterId",
+      "value": "",
+      "type": "string",
+      "description": "Data center ID for uploads"
+    },
+    {
+      "key": "lastUploadedFile",
+      "value": "",
+      "type": "string",
+      "description": "Last uploaded file metadata (JSON string)"
+    },
+    {
+      "key": "lastVendorScopeId",
+      "value": "",
+      "type": "string",
+      "description": "Last vendor scope ID from upload"
     }
   ],
   "item": [
@@ -344,6 +362,234 @@
           }
         }
       ]
+    },
+    {
+      "name": "File Uploads (BlockStorage)",
+      "item": [
+        {
+          "name": "Staff Upload - Scope1/Scope2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('File uploaded successfully:', response.file.originalName);",
+                  "    console.log('Stored path:', response.file.storedPath);",
+                  "    pm.collectionVariables.set('lastUploadedFile', JSON.stringify(response.file));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "PDF or Excel file to upload (scope1 or scope2)"
+                },
+                {
+                  "key": "scope",
+                  "value": "scope1",
+                  "type": "text",
+                  "description": "Must be 'scope1' or 'scope2'"
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text",
+                  "description": "Period in format YYYY-QN (e.g., 2025-Q1). Optional - defaults to current quarter."
+                },
+                {
+                  "key": "datacenterId",
+                  "value": "{{datacenterId}}",
+                  "type": "text",
+                  "description": "Data center ID (optional - uses user's default if not provided). Set the 'datacenterId' collection variable to use it here."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "staff"]
+            },
+            "description": "Upload file for staff members. Allowed scopes: scope1, scope2 only. Allowed file types: PDF (.pdf), Excel (.xls, .xlsx). Max file size: 50 MB."
+          }
+        },
+        {
+          "name": "Staff Upload - Scope2 Example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('File uploaded successfully:', response.file.originalName);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "PDF or Excel file for scope2"
+                },
+                {
+                  "key": "scope",
+                  "value": "scope2",
+                  "type": "text",
+                  "description": "Scope2 upload"
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "staff"]
+            },
+            "description": "Example request for scope2 upload by staff"
+          }
+        },
+        {
+          "name": "Vendor Upload - Scope3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Vendor file uploaded successfully:', response.file.originalName);",
+                  "    console.log('Vendor scope ID:', response.vendorScope.id);",
+                  "    console.log('Status:', response.vendorScope.status);",
+                  "    pm.collectionVariables.set('lastVendorScopeId', response.vendorScope.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "File to upload (PDF, Excel, CSV, ZIP, or Image). Vendors can only upload scope3 files."
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text",
+                  "description": "Period in format YYYY-QN (e.g., 2025-Q1). Optional - defaults to current quarter."
+                },
+                {
+                  "key": "datacenterId",
+                  "value": "{{datacenterId}}",
+                  "type": "text",
+                  "description": "Data center ID (optional - uses user's default if not provided). Set the 'datacenterId' collection variable to use it here."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/vendor",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "vendor"]
+            },
+            "description": "Upload file for vendors. Only scope3 is allowed. Allowed file types: PDF, Excel (.xls, .xlsx), CSV, ZIP, Images (.jpg, .png). Max file size: 50 MB. Note: Scope is automatically set to scope3 for vendor uploads."
+          }
+        },
+        {
+          "name": "Vendor Upload - CSV Example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    console.log('CSV file uploaded successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "CSV file for scope3 data"
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/vendor",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "vendor"]
+            },
+            "description": "Example request for vendor CSV upload (scope3)"
+          }
+        }
+      ],
+      "description": "BlockStorage file upload endpoints for staff (scope1/scope2) and vendor (scope3) file uploads. Files are stored in the blockStorage directory structure."
     },
     {
       "name": "Database Test",

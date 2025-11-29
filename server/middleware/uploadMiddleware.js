@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
 // File size limit: 50 MB
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB in bytes
@@ -84,13 +85,26 @@ export const validateScope = (scope, role) => {
 };
 
 /**
+ * Get system temp directory (cross-platform)
+ */
+const getTempDir = () => {
+  const tmpDir = os.tmpdir();
+  // Ensure temp directory exists
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  }
+  return tmpDir;
+};
+
+/**
  * Create multer storage configuration for staff uploads
  */
 const createStaffStorage = () => {
+  const tempDir = getTempDir();
   return multer.diskStorage({
     destination: (req, file, cb) => {
-      // Destination will be set in upload service after folder creation
-      cb(null, '/tmp'); // Temporary location, will be moved
+      // Use system temp directory (cross-platform)
+      cb(null, tempDir);
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -104,10 +118,11 @@ const createStaffStorage = () => {
  * Create multer storage configuration for vendor uploads
  */
 const createVendorStorage = () => {
+  const tempDir = getTempDir();
   return multer.diskStorage({
     destination: (req, file, cb) => {
-      // Destination will be set in upload service after folder creation
-      cb(null, '/tmp'); // Temporary location, will be moved
+      // Use system temp directory (cross-platform)
+      cb(null, tempDir);
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -119,17 +134,11 @@ const createVendorStorage = () => {
 
 /**
  * File filter for staff uploads
+ * Note: req.body is not available during file filter phase with multipart/form-data
+ * Scope validation is done in the controller instead
  */
 const staffFileFilter = (req, file, cb) => {
-  const scope = req.body.scope || req.query.scope;
-  
-  // Validate scope
-  const scopeValidation = validateScope(scope, 'staff');
-  if (!scopeValidation.valid) {
-    return cb(new Error(scopeValidation.error), false);
-  }
-  
-  // Validate file type
+  // Only validate file type here (scope validation happens in controller)
   if (!isValidFileType(file.mimetype, file.originalname, 'staff')) {
     return cb(
       new Error(
@@ -144,17 +153,11 @@ const staffFileFilter = (req, file, cb) => {
 
 /**
  * File filter for vendor uploads
+ * Note: req.body is not available during file filter phase with multipart/form-data
+ * Scope validation is done in the controller instead (vendors always use scope3)
  */
 const vendorFileFilter = (req, file, cb) => {
-  const scope = req.body.scope || req.query.scope;
-  
-  // Validate scope
-  const scopeValidation = validateScope(scope, 'vendor');
-  if (!scopeValidation.valid) {
-    return cb(new Error(scopeValidation.error), false);
-  }
-  
-  // Validate file type
+  // Only validate file type here (scope is always scope3 for vendors, validated in controller)
   if (!isValidFileType(file.mimetype, file.originalname, 'vendor')) {
     return cb(
       new Error(

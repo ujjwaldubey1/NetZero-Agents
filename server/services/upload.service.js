@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import mongoose from 'mongoose';
 import {
   createStaffUploadFolder,
   createVendorUploadFolder,
@@ -16,21 +17,35 @@ import DataCenter from '../models/DataCenter.js';
 /**
  * Get data center ID from user
  * @param {Object} user - User object
- * @param {string} datacenterId - Optional explicit datacenter ID
- * @returns {Promise<string>} - Data center ID
+ * @param {string} datacenterIdOrName - Optional explicit datacenter ID (ObjectId) or name (string)
+ * @returns {Promise<string>} - Data center ID (ObjectId as string)
  */
-const getDatacenterId = async (user, datacenterId = null) => {
-  if (datacenterId) {
-    // Validate that user has access to this datacenter
+const getDatacenterId = async (user, datacenterIdOrName = null) => {
+  if (datacenterIdOrName) {
+    // Get user's access filter
     const filter = getUserDatacenterFilter(user);
-    const dc = await DataCenter.findOne({ _id: datacenterId, ...filter });
+    
+    // Check if the provided value is a valid ObjectId
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(datacenterIdOrName);
+    
+    let dc;
+    if (isValidObjectId) {
+      // Query by _id if it's a valid ObjectId
+      dc = await DataCenter.findOne({ _id: datacenterIdOrName, ...filter });
+    } else {
+      // Query by name if it's not a valid ObjectId (e.g., "India_northEast")
+      dc = await DataCenter.findOne({ name: datacenterIdOrName, ...filter });
+    }
+    
     if (!dc) {
-      throw new Error('Access denied: You are not assigned to this datacenter');
+      throw new Error(
+        `Access denied: You are not assigned to datacenter "${datacenterIdOrName}" or it does not exist.`
+      );
     }
     return dc._id.toString();
   }
   
-  // Find user's datacenter
+  // Find user's datacenter (fallback if no datacenter specified)
   const filter = getUserDatacenterFilter(user);
   const dc = await DataCenter.findOne(filter).sort({ createdAt: -1 });
   if (!dc) {
@@ -84,13 +99,25 @@ const normalizePeriod = (period) => {
  */
 const moveFile = async (tempPath, destinationPath) => {
   try {
-    await fs.rename(tempPath, destinationPath);
-    return destinationPath;
+    // Check if source file exists
+    try {
+      await fs.access(tempPath);
+    } catch (accessError) {
+      throw new Error(`Source file not found: ${tempPath}. Error: ${accessError.message}`);
+    }
+    
+    // Try to rename first (fastest, works on same filesystem)
+    try {
+      await fs.rename(tempPath, destinationPath);
+      return destinationPath;
+    } catch (renameError) {
+      // If rename fails (cross-device or other error), copy and delete
+      await fs.copyFile(tempPath, destinationPath);
+      await fs.unlink(tempPath);
+      return destinationPath;
+    }
   } catch (error) {
-    // If rename fails (cross-device), copy and delete
-    await fs.copyFile(tempPath, destinationPath);
-    await fs.unlink(tempPath);
-    return destinationPath;
+    throw new Error(`Failed to move file from ${tempPath} to ${destinationPath}: ${error.message}`);
   }
 };
 

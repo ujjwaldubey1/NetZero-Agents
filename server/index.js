@@ -72,8 +72,22 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/upload', uploadRoutes(upload)); // Legacy upload routes (kept for backward compatibility)
-app.use('/api/upload', uploadBlockStorageRoutes); // New blockStorage upload routes (/api/upload/staff, /api/upload/vendor)
+
+// File upload routes - new blockStorage routes must come before legacy routes
+console.log('📦 Registering upload routes...');
+try {
+  app.use('/api/upload', uploadBlockStorageRoutes); // New: /api/upload/staff, /api/upload/vendor
+  console.log('✅ BlockStorage upload routes registered');
+} catch (err) {
+  console.error('❌ Error registering BlockStorage routes:', err.message);
+}
+try {
+  app.use('/api/upload', uploadRoutes(upload)); // Legacy: /api/upload/upload
+  console.log('✅ Legacy upload routes registered');
+} catch (err) {
+  console.error('❌ Error registering legacy upload routes:', err.message);
+}
+
 app.use('/api/zk', zkRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/vendor-scope', vendorScopeRoutes);
@@ -102,6 +116,12 @@ ensureZkArtifacts().catch((err) => {
 startReminderAgent();
 
 const startServer = (port) => {
+  // Log all registered routes for debugging
+  console.log('\n📋 Registered Routes:');
+  console.log('  POST /api/upload/staff - Staff file upload');
+  console.log('  POST /api/upload/vendor - Vendor file upload');
+  console.log('  POST /api/upload/upload - Legacy upload route\n');
+  
   const server = app.listen(port, () => {
     console.log(`NetZero Agents server running on port ${port}`);
   });

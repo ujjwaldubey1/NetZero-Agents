@@ -5,6 +5,11 @@ import { uploadStaffFileHandler, uploadVendorFileHandler } from '../controllers/
 
 const router = express.Router();
 
+// Test route to verify router is working
+router.get('/test', (req, res) => {
+  res.json({ message: 'BlockStorage upload routes are working!', routes: ['/staff', '/vendor'] });
+});
+
 /**
  * POST /api/upload/staff
  * Upload file for staff (scope1 or scope2 only)
@@ -20,7 +25,16 @@ router.post(
   authRequired,
   roleRequired('staff'),
   staffUpload.single('file'),
-  handleUploadError,
+  (err, req, res, next) => {
+    // Handle multer errors (including file filter errors)
+    if (err) {
+      return res.status(400).json({
+        error: 'Upload validation failed',
+        message: err.message,
+      });
+    }
+    next();
+  },
   uploadStaffFileHandler
 );
 
@@ -38,9 +52,17 @@ router.post(
   authRequired,
   roleRequired('vendor'),
   vendorUpload.single('file'),
-  handleUploadError,
+  (err, req, res, next) => {
+    // Handle multer errors (including file filter errors)
+    if (err) {
+      return res.status(400).json({
+        error: 'Upload validation failed',
+        message: err.message,
+      });
+    }
+    next();
+  },
   uploadVendorFileHandler
 );
 
 export default router;
-
