@@ -1,0 +1,282 @@
+:root {
+  --spider-blue: #00f0ff;
+  --spider-red: #ff0055;
+  --spider-black: #0a0a0a;
+  --spider-yellow: #fcee0a;
+  --spider-white: #ffffff;
+  --comic-border: 3px solid var(--spider-black);
+  --comic-shadow: 5px 5px 0px var(--spider-black);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--spider-white);
+  background-image: radial-gradient(var(--spider-black) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: var(--spider-black);
+  font-family: "M PLUS Rounded 1c", "Space Grotesk", sans-serif;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Bangers", "Russo One", sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 4px 4px 0px var(--spider-blue);
+  font-weight: 900;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--spider-white);
+  border-left: var(--comic-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--spider-red);
+  border: 3px solid var(--spider-black);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--spider-blue);
+}
+
+.glitch-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 0, 85, 0.08) 0px, rgba(255, 0, 85, 0.08) 2px, transparent 2px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(0, 240, 255, 0.06) 0px, rgba(0, 240, 255, 0.06) 3px, transparent 3px, transparent 6px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  z-index: 999;
+  filter: contrast(140%) saturate(120%);
+}
+
+.glitch-wrapper {
+  will-change: transform, filter;
+}
+
+.vendor-meme-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-color: #ffffff;
+  /* Layer 1..4: high quality online memes (tile to create a patterned mosaic),
+     final layer is a local fallback that sits centered */
+  background-image:
+    url('https://i.kym-cdn.com/photos/images/newsfeed/001/188/977/3b8.png'), /* This is fine */
+    url('https://i.kym-cdn.com/photos/images/original/001/194/766/7e5.jpg'), /* Distracted boyfriend */
+    url('https://i.kym-cdn.com/photos/images/original/000/096/044/troll2.jpg'), /* Trollface */
+    url('https://i.kym-cdn.com/photos/images/newsfeed/001/960/238/3a9.jpg'), /* Surprised Pikachu */
+    url('/memes/meme1.png'); /* local fallback */
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat;
+  /* Smallish sizes so they tile comfortably and don't overwhelm the UI */
+  background-size: 220px auto, 220px auto, 220px auto, 220px auto, 260px auto;
+  background-position: 0 0, 120px 40px, 60px 160px, 240px 120px, center bottom -60px;
+  background-attachment: fixed;
+  background-blend-mode: overlay;
+  opacity: 0.12;
+  filter: saturate(110%) grayscale(0.02);
+  mix-blend-mode: multiply;
+}
+
+/* Utility Classes */
+.comic-box {
+  background: var(--spider-white);
+  border: var(--comic-border);
+  box-shadow: var(--comic-shadow);
+  transition: all 0.2s ease;
+}
+
+.comic-box:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--spider-black);
+}
+
+.glitch-text {
+  position: relative;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch-text::before {
+  left: 2px;
+  text-shadow: -1px 0 var(--spider-red);
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim 5s infinite linear alternate-reverse;
+}
+
+.glitch-text::after {
+  left: -2px;
+  text-shadow: -1px 0 var(--spider-blue);
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch-anim2 5s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+  0% {
+    clip: rect(38px, 9999px, 49px, 0);
+  }
+  20% {
+    clip: rect(8px, 9999px, 100px, 0);
+  }
+  40% {
+    clip: rect(68px, 9999px, 11px, 0);
+  }
+  60% {
+    clip: rect(28px, 9999px, 89px, 0);
+  }
+  80% {
+    clip: rect(18px, 9999px, 29px, 0);
+  }
+  100% {
+    clip: rect(58px, 9999px, 99px, 0);
+  }
+}
+
+@keyframes glitch-anim2 {
+  0% {
+    clip: rect(18px, 9999px, 89px, 0);
+  }
+  20% {
+    clip: rect(58px, 9999px, 19px, 0);
+  }
+  40% {
+    clip: rect(8px, 9999px, 41px, 0);
+  }
+  60% {
+    clip: rect(88px, 9999px, 9px, 0);
+  }
+  80% {
+    clip: rect(38px, 9999px, 59px, 0);
+  }
+  100% {
+    clip: rect(48px, 9999px, 29px, 0);
+  }
+}
+
+/* Manga Chapter Page Styles with Hand-drawn Borders */
+.manga-chapter-page {
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 3000px;
+  margin: 40px 0;
+  will-change: transform, scale;
+}
+
+.manga-page-frame {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 0.1s ease-out;
+}
+
+/* Slanted Panel with 2.5D */
+.slanted-panel {
+  transform-style: preserve-3d;
+  perspective: 2000px;
+  will-change: transform;
+}
+
+.slanted-panel > * {
+  transform-style: preserve-3d;
+}
+
+/* Manga Panel Animation */
+.manga-panel {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Movie-like depth effect */
+
+/* Comic Table Styles */
+.comic-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100%;
+  border: 3px solid #0a0a0a !important;
+}
+
+.comic-table thead th {
+  background-color: #0a0a0a !important;
+  color: #ffffff !important;
+  font-family: "Bangers", sans-serif !important;
+  font-size: 1.2rem !important;
+  letter-spacing: 1px !important;
+  border-bottom: 3px solid #0a0a0a !important;
+  padding: 12px !important;
+  text-transform: uppercase !important;
+}
+
+.comic-table tbody td {
+  border-bottom: 2px solid #0a0a0a !important;
+  border-right: 2px solid #0a0a0a !important;
+  padding: 12px !important;
+  font-family: "Space Grotesk", sans-serif !important;
+  font-weight: 700 !important;
+  color: #0a0a0a !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  font-size: 0.95rem !important;
+}
+
+.comic-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.comic-table tbody td:last-child {
+  border-right: none !important;
+}
+
+
+/* Comic Input/Select Styles */
+.comic-input .MuiOutlinedInput-notchedOutline {
+  border: 3px solid #0a0a0a !important;
+  border-radius: 0 !important;
+}
+
+.comic-input .MuiSelect-select, 
+.comic-input .MuiInputBase-input {
+  font-family: "Space Grotesk", sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  color: #0a0a0a !important;
+}
+
+.comic-input:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #00f0ff !important; /* Spider Blue */
+}
+
+.comic-input .Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #ff0055 !important; /* Spider Red */
+  border-width: 3px !important;
+}
+
+.comic-input .MuiInputLabel-root {
+  font-family: "Bangers", sans-serif !important;
+  letter-spacing: 1px !important;
+  color: #0a0a0a !important;
+}
+
+.comic-input .MuiInputLabel-root.Mui-focused {
+  color: #ff0055 !important;
+}
+
+
