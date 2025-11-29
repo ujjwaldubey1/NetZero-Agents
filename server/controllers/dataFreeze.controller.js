@@ -3,7 +3,7 @@
  * Handles requests for freezing data and generating cryptographic proofs
  */
 
-import { freezeDataAndGenerateProofs, verifyReportHash, verifyEvidenceMerkleRoot } from '../services/dataFreeze.service.js';
+import { freezeDataAndGenerateProofs, verifyReportHash, verifyEvidenceMerkleRoot, computeSHA256 } from '../services/dataFreeze.service.js';
 import AuditLog from '../models/AuditLog.js';
 import { authRequired, roleRequired } from '../middleware/auth.js';
 
@@ -89,6 +89,9 @@ export const verifyReport = async (req, res) => {
     }
 
     const isValid = verifyReportHash(data, expectedHash);
+    
+    // Compute the actual hash for debugging
+    const computedHash = computeSHA256(data);
 
     res.status(200).json({
       success: true,
@@ -96,6 +99,12 @@ export const verifyReport = async (req, res) => {
       message: isValid
         ? 'Report hash verification successful - data integrity confirmed'
         : 'Report hash verification failed - data may have been tampered with',
+      debug: {
+        computedHash: computedHash,
+        expectedHash: expectedHash,
+        hashesMatch: computedHash === expectedHash,
+        note: !isValid ? 'The data provided does not match the data that was originally frozen. Make sure you are using the exact same data structure and values.' : null,
+      },
     });
   } catch (error) {
     console.error('❌ Report verification error:', error);

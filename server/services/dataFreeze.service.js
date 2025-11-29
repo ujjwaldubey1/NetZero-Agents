@@ -53,7 +53,7 @@ const canonicalJSONStringify = (data) => {
  * @param {*} data - Data to hash
  * @returns {string} - SHA-256 hash (hex string, 64 characters)
  */
-const computeSHA256 = (data) => {
+export const computeSHA256 = (data) => {
   const canonical = canonicalJSONStringify(data);
   return crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
 };

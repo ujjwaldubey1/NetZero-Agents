@@ -50,6 +50,24 @@
       "value": "",
       "type": "string",
       "description": "Last analyzed datacenter name"
+    },
+    {
+      "key": "lastReportHash",
+      "value": "",
+      "type": "string",
+      "description": "Last generated report hash (SHA-256)"
+    },
+    {
+      "key": "lastMerkleRoot",
+      "value": "",
+      "type": "string",
+      "description": "Last generated Merkle root hash (SHA-256)"
+    },
+    {
+      "key": "lastEvidenceHashes",
+      "value": "",
+      "type": "string",
+      "description": "Last generated evidence hashes (JSON array as string)"
     }
   ],
   "item": [
@@ -906,6 +924,17 @@
                   "    // Save analysis results for reference",
                   "    pm.collectionVariables.set('lastAnalysisPeriod', response.period);",
                   "    pm.collectionVariables.set('lastAnalysisDatacenter', response.datacenter);",
+                  "    ",
+                  "    // Save cryptographic proofs if available",
+                  "    if (response.cryptographic_proofs) {",
+                  "        pm.collectionVariables.set('lastReportHash', response.cryptographic_proofs.report_hash);",
+                  "        pm.collectionVariables.set('lastMerkleRoot', response.cryptographic_proofs.evidence_merkle_root);",
+                  "        pm.collectionVariables.set('lastEvidenceHashes', JSON.stringify(response.cryptographic_proofs.evidence_hashes));",
+                  "        console.log('🔒 Cryptographic proofs saved to collection variables');",
+                  "        console.log('   Report Hash:', response.cryptographic_proofs.report_hash.substring(0, 16) + '...');",
+                  "        console.log('   Merkle Root:', response.cryptographic_proofs.evidence_merkle_root.substring(0, 16) + '...');",
+                  "        console.log('   Evidence Items:', response.cryptographic_proofs.evidence_hashes.length);",
+                  "    }",
                   "} else {",
                   "    console.error('❌ Analysis failed:', pm.response.code);",
                   "    const error = pm.response.json();",
@@ -939,7 +968,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "orchestrator", "analyze"]
             },
-            "description": "Generate a comprehensive emissions analysis report by coordinating multiple AI agents (Gemini-powered):\n\n**Agents Triggered:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions and anomalies\n- Carbon Credits Agent - Looks up thresholds and calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Period Formats Supported:**\n- \"Q1 2025\"\n- \"2025-Q1\"\n- \"2025-01\" (auto-converted to quarter)\n\n**Returns:** Unified JSON report with:\n- vendors_summary: Vendor analysis with anomalies\n- carbon_credit_summary: Compliance and credit analysis\n- staff_summary: Scope 1 & 2 emissions analysis\n- final_report: Human-readable comprehensive summary\n\n**Requires:** Authentication token"
+            "description": "Generate a comprehensive emissions analysis report by coordinating multiple AI agents (Gemini-powered):\n\n**Agents Triggered:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions and anomalies\n- Carbon Credits Agent - Looks up thresholds and calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Period Formats Supported:**\n- \"Q1 2025\"\n- \"2025-Q1\"\n- \"2025-01\" (auto-converted to quarter)\n\n**Returns:** Unified JSON report with:\n- vendors_summary: Vendor analysis with anomalies\n- carbon_credit_summary: Compliance and credit analysis\n- staff_summary: Scope 1 & 2 emissions analysis\n- final_report: Human-readable comprehensive summary\n- cryptographic_proofs: Automatic data freeze with report hash, evidence hashes, and Merkle root\n\n**Requires:** Authentication token\n\n**Note:** Cryptographic proofs are automatically generated and saved to collection variables for verification."
           }
         },
         {
@@ -1069,7 +1098,233 @@
           }
         }
       ],
-      "description": "AI-powered orchestration system (using Gemini LLM) that coordinates multiple specialized agents to produce comprehensive emissions analysis reports.\n\n**Agents:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions, compares quarters, detects anomalies\n- Carbon Credits Agent - Looks up legal thresholds, calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Features:**\n- Parallel agent execution for efficiency\n- AI-powered unified report generation (Gemini)\n- Comprehensive anomaly detection\n- Quarter-over-quarter comparison\n- Statistical analysis for patterns\n\n**Requirements:**\n- GEMINI_API_KEY set in .env (or OPENAI_API_KEY as fallback)\n- Authentication token\n- Valid datacenter name and period"
+      "description": "AI-powered orchestration system (using Gemini LLM) that coordinates multiple specialized agents to produce comprehensive emissions analysis reports.\n\n**Agents:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions, compares quarters, detects anomalies\n- Carbon Credits Agent - Looks up legal thresholds, calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Features:**\n- Parallel agent execution for efficiency\n- AI-powered unified report generation (Gemini)\n- Comprehensive anomaly detection\n- Quarter-over-quarter comparison\n- Statistical analysis for patterns\n- Automatic cryptographic proof generation (data freeze)\n\n**Requirements:**\n- GEMINI_API_KEY set in .env (or OPENAI_API_KEY as fallback)\n- Authentication token\n- Valid datacenter name and period"
+    },
+    {
+      "name": "Data Freeze - Cryptographic Proofs",
+      "item": [
+        {
+          "name": "Freeze Data and Generate Proofs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Data frozen and cryptographic proofs generated!');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🔒 Cryptographic Proofs');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('Report Hash:', response.report_hash);",
+                  "    console.log('Merkle Root:', response.evidence_merkle_root);",
+                  "    console.log('Evidence Items:', response.evidence_hashes.length);",
+                  "    console.log('');",
+                  "    console.log('Evidence Hashes:');",
+                  "    response.evidence_hashes.forEach((hash, index) => {",
+                  "        console.log(`  ${index + 1}. ${hash.substring(0, 16)}...`);",
+                  "    });",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    ",
+                  "    // Save to collection variables for verification",
+                  "    pm.collectionVariables.set('lastReportHash', response.report_hash);",
+                  "    pm.collectionVariables.set('lastMerkleRoot', response.evidence_merkle_root);",
+                  "    pm.collectionVariables.set('lastEvidenceHashes', JSON.stringify(response.evidence_hashes));",
+                  "    console.log('💾 Cryptographic proofs saved to collection variables');",
+                  "} else {",
+                  "    console.error('❌ Data freeze failed:', pm.response.code);",
+                  "    const error = pm.response.json();",
+                  "    console.error('Error:', error.error || 'Unknown error');",
+                  "    console.error('Message:', error.message || 'No message');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"vendors_summary\": {\n      \"vendors\": [\n        {\n          \"name\": \"Example Vendor\",\n          \"scope3_comparison\": {\n            \"previous_quarter\": {},\n            \"current_quarter\": {\n              \"total_co2e\": 150.5\n            }\n          },\n          \"anomalies\": []\n        }\n      ]\n    },\n    \"carbon_credit_summary\": {\n      \"carbon_credits\": {\n        \"country\": \"India\",\n        \"latest_threshold\": \"50.0 tCO2e/year\",\n        \"current_emission\": \"150.5 tCO2e\",\n        \"credit_score\": \"NON-COMPLIANT\"\n      }\n    },\n    \"staff_summary\": {\n      \"staff\": {\n        \"scope1\": {\n          \"scope1_comparison\": {\n            \"previous_quarter\": {},\n            \"current_quarter\": {\n              \"total_co2e\": 45.2\n            }\n          },\n          \"anomalies\": []\n        },\n        \"scope2\": {\n          \"scope2_comparison\": {\n            \"previous_quarter\": {},\n            \"current_quarter\": {\n              \"total_co2e\": 78.9\n            }\n          },\n          \"anomalies\": []\n        }\n      }\n    },\n    \"final_report\": \"Example report text\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data-freeze/freeze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data-freeze", "freeze"]
+            },
+            "description": "Freeze data and generate cryptographic proofs for blockchain-grade integrity guarantees.\n\n**What it does:**\n1. Freezes data exactly as provided (no modification)\n2. Creates SHA-256 hash of entire report\n3. Generates SHA-256 hashes for each evidence item\n4. Builds Merkle tree from all evidence hashes\n\n**Returns:**\n- report_hash: SHA-256 hash of entire report (64 characters)\n- evidence_hashes: Array of SHA-256 hashes for each evidence item\n- evidence_merkle_root: Final Merkle root hash (64 characters)\n\n**Requires:** Authentication token (any authenticated user)\n\n**Note:** Proofs are automatically saved to collection variables for verification."
+          }
+        },
+        {
+          "name": "Verify Report Hash",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Use last report hash if available",
+                  "const lastHash = pm.collectionVariables.get('lastReportHash');",
+                  "if (lastHash) {",
+                  "    console.log('💡 Using last report hash from collection variables');",
+                  "} else {",
+                  "    console.warn('⚠️  No report hash found in collection variables.');",
+                  "    console.warn('   Make sure to run the orchestrator analysis first, or');",
+                  "    console.warn('   manually set the expectedHash in the request body.');",
+                  "}",
+                  "",
+                  "// Helper: Extract data and hash from orchestrator response",
+                  "// If you have the full orchestrator response, you can use this:",
+                  "// 1. Remove cryptographic_proofs",
+                  "// 2. Use the remaining data as 'data' field",
+                  "// 3. Extract cryptographic_proofs.report_hash as 'expectedHash'"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🔍 Report Hash Verification');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    if (response.verified) {",
+                  "        console.log('✅ VERIFIED: Report hash matches - data integrity confirmed');",
+                  "        console.log('   The report has not been tampered with.');",
+                  "    } else {",
+                  "        console.error('❌ FAILED: Report hash does not match');",
+                  "        console.error('   The report may have been modified or tampered with.');",
+                  "        ",
+                  "        // Show debug info if available",
+                  "        if (response.debug) {",
+                  "            console.log('');",
+                  "            console.log('🔍 Debug Information:');",
+                  "            console.log('   Computed Hash:', response.debug.computedHash);",
+                  "            console.log('   Expected Hash:', response.debug.expectedHash);",
+                  "            console.log('   Hashes Match:', response.debug.hashesMatch);",
+                  "            if (response.debug.note) {",
+                  "                console.log('   Note:', response.debug.note);",
+                  "            }",
+                  "            console.log('');",
+                  "            console.log('💡 Tip: Make sure the data you are verifying matches');",
+                  "            console.log('   exactly the data that was frozen. Use the actual');",
+                  "            console.log('   orchestrator analysis result, not example data.');",
+                  "        }",
+                  "    }",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "} else {",
+                  "    console.error('❌ Verification request failed:', pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"success\": true,\n    \"datacenter\": \"india-northeast\",\n    \"period\": \"2025-Q1\",\n    \"vendors_summary\": {\n      \"vendors\": [\n        {\n          \"name\": \"samsung\",\n          \"email\": \"ujjwal+samsung@gmail.com\",\n          \"scope3_comparison\": {\n            \"previous_quarter\": \"No data available\",\n            \"current_quarter\": \"0.00 tCO2e\"\n          },\n          \"anomalies\": [\n            {\n              \"type\": \"NO_BASELINE\",\n              \"reason\": \"No historical data available for comparison. Baseline should be established for future analysis.\"\n            }\n          ],\n          \"status\": \"submitted\",\n          \"attested\": false\n        }\n      ],\n      \"summary\": {\n        \"total_vendors\": 1,\n        \"total_anomalies\": 1,\n        \"total_scope3\": 0\n      }\n    },\n    \"carbon_credit_summary\": {\n      \"carbon_credits\": {\n        \"country\": \"manipur\",\n        \"latest_threshold\": \"50 tCO2e/year\",\n        \"threshold_source\": \"Fallback estimate\",\n        \"current_emission\": \"0.00 tCO2e\",\n        \"annual_projection\": \"0.00 tCO2e/year\",\n        \"credit_score\": \"COMPLIANT\",\n        \"credit_requirement\": \"0 credits needed\",\n        \"compliance_status\": \"COMPLIANT\",\n        \"analysis\": \"Annual emissions projection (0.00 tCO2e) is below the threshold (50 tCO2e/year). No carbon credits required.\"\n      }\n    },\n    \"staff_summary\": {\n      \"staff\": {\n        \"scope1\": {\n          \"total_co2e\": 0,\n          \"comparison\": {\n            \"previous_quarter\": \"No data available\",\n            \"current_quarter\": \"0.00 tCO2e\",\n            \"change\": \"N/A\"\n          },\n          \"anomalies\": [\n            {\n              \"type\": \"NO_BASELINE\",\n              \"reason\": \"No historical data available for comparison. Baseline should be established for future analysis.\"\n            }\n          ],\n          \"data_breakdown\": {\n            \"diesel_liters\": 0,\n            \"diesel_co2_tons\": 0,\n            \"refrigerant_kg\": 0,\n            \"refrigerant_co2_tons\": 0,\n            \"other_sources\": {}\n          }\n        },\n        \"scope2\": {\n          \"total_co2e\": 0,\n          \"comparison\": {\n            \"previous_quarter\": \"No data available\",\n            \"current_quarter\": \"0.00 tCO2e\",\n            \"change\": \"N/A\"\n          },\n          \"anomalies\": [\n            {\n              \"type\": \"NO_BASELINE\",\n              \"reason\": \"No historical data available for comparison. Baseline should be established for future analysis.\"\n            }\n          ],\n          \"data_breakdown\": {\n            \"electricity_kwh\": 0,\n            \"electricity_co2_tons\": 0,\n            \"grid_factor\": \"Not specified\",\n            \"other_sources\": {}\n          }\n        },\n        \"summary\": {\n          \"total_scope1_co2e\": 0,\n          \"total_scope2_co2e\": 0,\n          \"total_scope1_anomalies\": 1,\n          \"total_scope2_anomalies\": 1,\n          \"combined_total\": 0\n        }\n      }\n    },\n    \"final_report\": \"# Emissions Analysis Report\\n**Datacenter:** india-northeast\\n**Period:** 2025-Q1\\n**Generated:** 29/11/2025, 11:53:09 pm\\n\\n## Executive Summary\\nThis report analyzes emissions data for india-northeast during 2025-Q1. The analysis covers vendor Scope 3 emissions, staff Scope 1 and Scope 2 emissions, and carbon credit positioning.\\n\\n## Vendor Insights\\n- **Total Vendors Analyzed:** 1\\n- **Total Anomalies Detected:** 1\\n- **Total Scope 3 Emissions:** 0.00 tCO2e\\n\\n\\n### samsung\\n- Current Quarter: 0.00 tCO2e\\n- Previous Quarter: No data available\\n- Anomalies: 1\\n  - NO_BASELINE: No historical data available for comparison. Baseline should be established for future analysis.\\n\\n\\n## Staff Emissions Evaluation\\n- **Scope 1 Emissions:** N/A tCO2e\\n- **Scope 2 Emissions:** N/A tCO2e\\n- **Scope 1 Anomalies:** 0\\n- **Scope 2 Anomalies:** 0\\n\\n## Carbon Credit Positioning\\n- **Country:** manipur\\n- **Current Emissions:** 0.00 tCO2e\\n- **Legal Threshold:** 50 tCO2e/year\\n- **Credit Score:** COMPLIANT\\n\\n## Risks & Recommendations\\nBased on the analysis:\\n1. Monitor vendors with detected anomalies closely\\n2. Review staff emissions patterns for unusual increases\\n3. Ensure compliance with carbon credit thresholds\\n4. Consider implementing corrective actions for identified anomalies\\n\\n---\\n*Report generated automatically. For detailed analysis, review individual agent outputs.*\",\n    \"generatedAt\": \"2025-11-29T18:23:09.499Z\"\n  },\n  \"expectedHash\": \"{{lastReportHash}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data-freeze/verify-report",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data-freeze", "verify-report"]
+            },
+            "description": "Verify that report data matches the expected hash to detect tampering.\n\n**What it checks:**\n- Computes SHA-256 hash of the provided data\n- Compares it with the expected hash\n- Returns verification status\n\n**Request Body Format:**\n```json\n{\n  \"data\": {\n    \"success\": true,\n    \"datacenter\": \"india-northeast\",\n    \"period\": \"2025-Q1\",\n    \"vendors_summary\": { ... },\n    \"carbon_credit_summary\": { ... },\n    \"staff_summary\": { ... },\n    \"final_report\": \"...\",\n    \"generatedAt\": \"...\"\n  },\n  \"expectedHash\": \"ec313542fb36bee93c239d378d2c74b6c8cc06471c0058e8cc83ebaa539c0322\"\n}\n```\n\n**IMPORTANT - How to verify orchestrator result:**\n1. Take your orchestrator response\n2. Remove the `cryptographic_proofs` field entirely\n3. Wrap the remaining object in a `data` field\n4. Extract `cryptographic_proofs.report_hash` as `expectedHash`\n\n**Example:**\nIf orchestrator returns:\n```json\n{\n  \"success\": true,\n  \"datacenter\": \"...\",\n  \"vendors_summary\": { ... },\n  \"cryptographic_proofs\": { \"report_hash\": \"abc123...\" }\n}\n```\n\nFor verification, send:\n```json\n{\n  \"data\": {\n    \"success\": true,\n    \"datacenter\": \"...\",\n    \"vendors_summary\": { ... }\n  },\n  \"expectedHash\": \"abc123...\"\n}\n```\n\n**Response:**\n- verified: true if hash matches, false otherwise\n- message: Verification result message\n- debug: Debug information showing computed vs expected hash\n\n**Requires:** Authentication"
+          }
+        },
+        {
+          "name": "Verify Evidence Merkle Root",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Use last Merkle root if available",
+                  "const lastRoot = pm.collectionVariables.get('lastMerkleRoot');",
+                  "if (lastRoot) {",
+                  "    console.log('💡 Using last Merkle root from collection variables');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🔍 Evidence Merkle Root Verification');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    if (response.verified) {",
+                  "        console.log('✅ VERIFIED: Merkle root matches - all evidence items intact');",
+                  "        console.log('   No evidence items have been inserted, deleted, or modified.');",
+                  "    } else {",
+                  "        console.error('❌ FAILED: Merkle root does not match');",
+                  "        console.error('   Evidence items may have been tampered with.');",
+                  "    }",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "} else {",
+                  "    console.error('❌ Verification request failed:', pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evidenceItems\": [\n    {\n      \"type\": \"vendor_scope3\",\n      \"vendor_name\": \"Example Vendor\",\n      \"scope3_comparison\": {},\n      \"anomalies\": []\n    },\n    {\n      \"type\": \"carbon_credits\",\n      \"data\": {}\n    }\n  ],\n  \"expectedMerkleRoot\": \"{{lastMerkleRoot}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data-freeze/verify-evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data-freeze", "verify-evidence"]
+            },
+            "description": "Verify that evidence items match the expected Merkle root to detect tampering.\n\n**What it checks:**\n- Generates hashes for all provided evidence items\n- Builds Merkle tree from the hashes\n- Compares root with expected Merkle root\n- Returns verification status\n\n**Request Body:**\n- evidenceItems: Array of evidence items to verify\n- expectedMerkleRoot: The expected Merkle root hash (64 characters)\n\n**Response:**\n- verified: true if Merkle root matches, false otherwise\n- message: Verification result message\n\n**Requires:** Authentication\n\n**Tip:** Use the last Merkle root from collection variables or provide your own.\n\n**Note:** Evidence items must match exactly (same order, same data) as when frozen."
+          }
+        }
+      ],
+      "description": "Data Freeze Service - Generate and verify cryptographic proofs for blockchain-grade integrity guarantees.\n\n**Features:**\n- Freeze data exactly as provided (no modification)\n- SHA-256 report hashing for integrity verification\n- Individual evidence item hashing\n- Merkle tree generation for evidence verification\n- Tamper detection and integrity verification\n\n**Use Cases:**\n- Freeze orchestrator analysis results\n- Verify report integrity before use\n- Verify evidence integrity for compliance\n- Blockchain-grade data security\n\n**Requirements:**\n- Authentication token (any authenticated user can freeze data)\n- Valid data structure matching orchestrator output format"
     },
     {
       "name": "Database Test",

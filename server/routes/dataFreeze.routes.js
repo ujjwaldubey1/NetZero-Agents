@@ -12,9 +12,9 @@ const router = express.Router();
 /**
  * POST /api/data-freeze/freeze
  * Freeze data and generate cryptographic proofs
- * Requires authentication and operator role
+ * Requires authentication (any authenticated user can freeze data)
  */
-router.post('/freeze', authRequired, roleRequired('operator'), freezeData);
+router.post('/freeze', authRequired, freezeData);
 
 /**
  * POST /api/data-freeze/verify-report
