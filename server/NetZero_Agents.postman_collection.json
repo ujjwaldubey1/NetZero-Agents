@@ -32,6 +32,24 @@
       "value": "",
       "type": "string",
       "description": "Last vendor scope ID from upload"
+    },
+    {
+      "key": "lastIPFSCid",
+      "value": "",
+      "type": "string",
+      "description": "Last IPFS CID from upload"
+    },
+    {
+      "key": "lastAnalysisPeriod",
+      "value": "",
+      "type": "string",
+      "description": "Last analyzed period (e.g., 2025-Q1)"
+    },
+    {
+      "key": "lastAnalysisDatacenter",
+      "value": "",
+      "type": "string",
+      "description": "Last analyzed datacenter name"
     }
   ],
   "item": [
@@ -590,6 +608,468 @@
         }
       ],
       "description": "BlockStorage file upload endpoints for staff (scope1/scope2) and vendor (scope3) file uploads. Files are stored in the blockStorage directory structure."
+    },
+    {
+      "name": "IPFS (Pinata) - File Upload & Retrieval",
+      "item": [
+        {
+          "name": "IPFS Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('IPFS Service Status:', response.configured ? '✅ Configured' : '⚠️ Not Configured');",
+                  "    console.log('Auth Method:', response.authMethod);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "health"]
+            },
+            "description": "Check if IPFS (Pinata) service is configured and ready. Verify PINATA_JWT or PINATA_API_KEY/PINATA_SECRET_KEY are set in .env"
+          }
+        },
+        {
+          "name": "Upload File to IPFS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.cid) {",
+                  "        console.log('✅ File uploaded to IPFS successfully');",
+                  "        console.log('CID:', response.data.cid);",
+                  "        console.log('IPFS URL:', response.data.ipfsUrl);",
+                  "        console.log('Gateway URL:', response.data.gatewayUrl);",
+                  "        console.log('File Size:', response.data.size, 'bytes');",
+                  "        pm.collectionVariables.set('lastIPFSCid', response.data.cid);",
+                  "        console.log('💾 Saved CID to collection variable: lastIPFSCid');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "File to upload to IPFS (PDF, Excel, Images, etc.) - Max 50MB"
+                },
+                {
+                  "key": "fileName",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional: Custom filename (defaults to original filename)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "upload"]
+            },
+            "description": "Upload a file to IPFS via Pinata. Files are automatically pinned. Returns CID, IPFS URL, and gateway URL. Max file size: 50MB."
+          }
+        },
+        {
+          "name": "Get IPFS File Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('IPFS File Info:');",
+                  "    console.log('CID:', response.cid);",
+                  "    console.log('IPFS URL:', response.ipfsUrl);",
+                  "    console.log('Gateway URL:', response.gatewayUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/info/{{lastIPFSCid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "info", "{{lastIPFSCid}}"]
+            },
+            "description": "Get metadata about an IPFS file without downloading it. Uses the last uploaded CID from collection variable, or replace with any valid CID."
+          }
+        },
+        {
+          "name": "Retrieve File from IPFS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ File retrieved successfully from IPFS');",
+                  "    console.log('Content-Type:', pm.response.headers.get('Content-Type'));",
+                  "    console.log('Content-Length:', pm.response.headers.get('Content-Length'), 'bytes');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/retrieve/{{lastIPFSCid}}?download=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "retrieve", "{{lastIPFSCid}}"],
+              "query": [
+                {
+                  "key": "download",
+                  "value": "true",
+                  "description": "Set to true to force download, false for inline display"
+                }
+              ]
+            },
+            "description": "Retrieve and download a file from IPFS by CID. Uses the last uploaded CID from collection variable. The file will be downloaded to your computer."
+          }
+        },
+        {
+          "name": "Upload File from Path (Authenticated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.cid) {",
+                  "        console.log('✅ File uploaded to IPFS from filesystem');",
+                  "        console.log('CID:', response.data.cid);",
+                  "        pm.collectionVariables.set('lastIPFSCid', response.data.cid);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filePath\": \"C:\\\\Users\\\\EK522WS\\\\OneDrive\\\\Desktop\\\\scope_test_30x30.csv\",\n  \"fileName\": \"custom-name.csv\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/upload-file",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "upload-file"]
+            },
+            "description": "Upload an existing file from the server filesystem to IPFS. Requires authentication.\n\n**Two ways to use this endpoint:**\n\n1. **Complete file path:**\n   ```json\n   {\n     \"filePath\": \"C:\\\\Users\\\\YourName\\\\Desktop\\\\file.csv\"\n   }\n   ```\n   Provide the complete path including the filename.\n\n2. **Directory + fileName:**\n   ```json\n   {\n     \"filePath\": \"C:\\\\Users\\\\YourName\\\\Desktop\",\n     \"fileName\": \"file.csv\"\n   }\n   ```\n   If filePath is a directory, provide fileName to construct the full path.\n\n**Note:** On Windows, use double backslashes (\\\\) in JSON. The fileName parameter is optional if filePath includes the filename."
+          }
+        }
+      ],
+      "description": "IPFS (Pinata) endpoints for uploading files to decentralized storage and retrieving them. Configure PINATA_JWT or PINATA_API_KEY/PINATA_SECRET_KEY in .env file."
+    },
+    {
+      "name": "AI Orchestrator - Emissions Analysis",
+      "item": [
+        {
+          "name": "Orchestrator Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Orchestrator Status:', response.status);",
+                  "    console.log('LLM Provider:', response.llm_provider || 'Not configured');",
+                  "    console.log('LLM Configured:', response.llm_configured);",
+                  "    console.log('LLM Model:', response.llm_model || 'Not configured');",
+                  "    console.log('Available Agents:', Object.keys(response.agents).join(', '));",
+                  "    console.log('Message:', response.message);",
+                  "    ",
+                  "    // Set environment variables for testing",
+                  "    if (response.llm_configured) {",
+                  "        console.log('✅ LLM is configured and ready');",
+                  "    } else {",
+                  "        console.warn('⚠️  LLM not configured. Set GEMINI_API_KEY in .env');",
+                  "    }",
+                  "} else {",
+                  "    console.error('❌ Status check failed:', pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "status"]
+            },
+            "description": "Check if the AI Orchestrator service is operational and all agents are available. Verifies Gemini LLM configuration and agent availability.\n\n**Response includes:**\n- Service status\n- LLM provider (Gemini/OpenAI)\n- LLM configuration status\n- Available agents list\n- Helpful messages"
+          }
+        },
+        {
+          "name": "Analyze Emissions - Comprehensive Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set default datacenter if not already set",
+                  "if (!pm.collectionVariables.get('datacenterId')) {",
+                  "    pm.collectionVariables.set('datacenterId', 'India_northEast');",
+                  "    console.log('💡 Set default datacenterId: India_northEast');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Analysis completed successfully!');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('📊 Analysis Summary');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('Datacenter:', response.datacenter);",
+                  "    console.log('Period:', response.period);",
+                  "    console.log('Generated At:', response.generatedAt);",
+                  "    console.log('');",
+                  "    console.log('👥 Vendors:');",
+                  "    console.log('  Total:', response.vendors_summary?.summary?.total_vendors || 0);",
+                  "    console.log('  Total Scope3:', response.vendors_summary?.summary?.total_scope3?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('');",
+                  "    console.log('🌿 Carbon Credits:');",
+                  "    console.log('  Country:', response.carbon_credit_summary?.carbon_credits?.country || 'N/A');",
+                  "    console.log('  Status:', response.carbon_credit_summary?.carbon_credits?.compliance_status || 'N/A');",
+                  "    console.log('  Credit Score:', response.carbon_credit_summary?.carbon_credits?.credit_score || 'N/A');",
+                  "    console.log('');",
+                  "    console.log('👨‍💼 Staff Emissions:');",
+                  "    console.log('  Scope 1:', response.staff_summary?.staff?.scope1?.total_co2e?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('  Scope 2:', response.staff_summary?.staff?.scope2?.total_co2e?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('  Combined:', response.staff_summary?.staff?.summary?.combined_total?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('');",
+                  "    ",
+                  "    // Calculate total anomalies",
+                  "    const vendorAnomalies = response.vendors_summary?.vendors?.reduce((sum, v) => sum + (v.anomalies?.length || 0), 0) || 0;",
+                  "    const scope1Anomalies = response.staff_summary?.staff?.scope1?.anomalies?.length || 0;",
+                  "    const scope2Anomalies = response.staff_summary?.staff?.scope2?.anomalies?.length || 0;",
+                  "    const totalAnomalies = vendorAnomalies + scope1Anomalies + scope2Anomalies;",
+                  "    ",
+                  "    console.log('⚠️  Anomalies Detected:', totalAnomalies);",
+                  "    console.log('  Vendor Anomalies:', vendorAnomalies);",
+                  "    console.log('  Scope 1 Anomalies:', scope1Anomalies);",
+                  "    console.log('  Scope 2 Anomalies:', scope2Anomalies);",
+                  "    console.log('');",
+                  "    console.log('📄 Final Report Preview:');",
+                  "    console.log(response.final_report?.substring(0, 300) + '...');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    ",
+                  "    // Save analysis results for reference",
+                  "    pm.collectionVariables.set('lastAnalysisPeriod', response.period);",
+                  "    pm.collectionVariables.set('lastAnalysisDatacenter', response.datacenter);",
+                  "} else {",
+                  "    console.error('❌ Analysis failed:', pm.response.code);",
+                  "    const error = pm.response.json();",
+                  "    console.error('Error:', error.error || 'Unknown error');",
+                  "    console.error('Message:', error.message || 'No message');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"{{datacenterId}}\",\n  \"period\": \"Q1 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Generate a comprehensive emissions analysis report by coordinating multiple AI agents (Gemini-powered):\n\n**Agents Triggered:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions and anomalies\n- Carbon Credits Agent - Looks up thresholds and calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Period Formats Supported:**\n- \"Q1 2025\"\n- \"2025-Q1\"\n- \"2025-01\" (auto-converted to quarter)\n\n**Returns:** Unified JSON report with:\n- vendors_summary: Vendor analysis with anomalies\n- carbon_credit_summary: Compliance and credit analysis\n- staff_summary: Scope 1 & 2 emissions analysis\n- final_report: Human-readable comprehensive summary\n\n**Requires:** Authentication token"
+          }
+        },
+        {
+          "name": "Analyze Emissions - Current Quarter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Analysis for current quarter completed!');",
+                  "    const response = pm.response.json();",
+                  "    console.log('Period:', response.period);",
+                  "    console.log('Total Vendors:', response.vendors_summary?.vendors?.length || 0);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"India_northEast\",\n  \"period\": \"2025-Q1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Example analysis request with explicit datacenter name and period in YYYY-QN format. This will analyze emissions for Q1 2025."
+          }
+        },
+        {
+          "name": "Analyze Emissions - Previous Quarter Comparison",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Previous quarter analysis completed!');",
+                  "    console.log('This analysis compares Q4 2024 vs Q3 2024');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"{{datacenterId}}\",\n  \"period\": \"2024-Q4\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Analyze previous quarter (Q4 2024). The system will automatically compare with Q3 2024 for anomaly detection. Change the period to analyze any historical quarter."
+          }
+        },
+        {
+          "name": "Analyze Emissions - Test with Different Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Analysis with alternate period format completed!');",
+                  "    console.log('The system auto-converts \"Q1 2025\" to \"2025-Q1\"');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"{{datacenterId}}\",\n  \"period\": \"Q2 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Test the period format conversion. The system accepts \"Q2 2025\" format and converts it to \"2025-Q2\" internally."
+          }
+        }
+      ],
+      "description": "AI-powered orchestration system (using Gemini LLM) that coordinates multiple specialized agents to produce comprehensive emissions analysis reports.\n\n**Agents:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions, compares quarters, detects anomalies\n- Carbon Credits Agent - Looks up legal thresholds, calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Features:**\n- Parallel agent execution for efficiency\n- AI-powered unified report generation (Gemini)\n- Comprehensive anomaly detection\n- Quarter-over-quarter comparison\n- Statistical analysis for patterns\n\n**Requirements:**\n- GEMINI_API_KEY set in .env (or OPENAI_API_KEY as fallback)\n- Authentication token\n- Valid datacenter name and period"
     },
     {
       "name": "Database Test",

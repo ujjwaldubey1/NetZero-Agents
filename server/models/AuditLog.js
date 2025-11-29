@@ -166,6 +166,17 @@ AuditLogSchema.statics.logCardanoMinting = function ({ entityId, blockchainTx, t
   });
 };
 
+// Static method to log info events (generic logging)
+AuditLogSchema.statics.logInfo = function ({ event, user, entityId, details = {} }) {
+  return this.create({
+    event: event || 'info',
+    user: user || 'system',
+    entityId,
+    details,
+    severity: 'info',
+  });
+};
+
 // Static method to log errors
 AuditLogSchema.statics.logError = function ({ event, user, entityId, error, details = {} }) {
   return this.create({

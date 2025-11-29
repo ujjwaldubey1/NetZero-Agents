@@ -17,6 +17,9 @@ import zkRoutes from './routes/zk.routes.js';
 import blockchainRoutes from './routes/blockchain.routes.js';
 import vendorScopeRoutes from './routes/vendorScope.routes.js';
 import uploadBlockStorageRoutes from './routes/uploadBlockStorage.routes.js';
+import orchestratorRoutes from './routes/orchestrator.routes.js';
+import ipfsRoutes from './routes/ipfs.routes.js';
+import dataFreezeRoutes from './routes/dataFreeze.routes.js';
 
 // Legacy routes (kept for backwards compatibility)
 import emissionRoutes from './routes/emissions.js';
@@ -91,6 +94,9 @@ try {
 app.use('/api/zk', zkRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/vendor-scope', vendorScopeRoutes);
+app.use('/api/ipfs', ipfsRoutes);
+app.use('/api/orchestrator', orchestratorRoutes);
+app.use('/api/data-freeze', dataFreezeRoutes);
 
 // Legacy routes (maintained for backwards compatibility)
 app.use('/api/emissions', emissionRoutes(upload));
@@ -120,7 +126,13 @@ const startServer = (port) => {
   console.log('\n📋 Registered Routes:');
   console.log('  POST /api/upload/staff - Staff file upload');
   console.log('  POST /api/upload/vendor - Vendor file upload');
-  console.log('  POST /api/upload/upload - Legacy upload route\n');
+  console.log('  POST /api/upload/upload - Legacy upload route');
+  console.log('  GET  /api/ipfs/health - IPFS service health check');
+  console.log('  POST /api/ipfs/upload - Upload file to IPFS');
+    console.log('  GET  /api/ipfs/info/:cid - Get IPFS file info');
+    console.log('  GET  /api/ipfs/retrieve/:cid - Retrieve file from IPFS');
+    console.log('  GET  /api/orchestrator/status - Orchestrator service status');
+    console.log('  POST /api/orchestrator/analyze - Generate comprehensive emissions analysis\n');
   
   const server = app.listen(port, () => {
     console.log(`NetZero Agents server running on port ${port}`);
