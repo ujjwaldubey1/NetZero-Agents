@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Box, Typography, Chip, Stack } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Lock, CloudUpload, Shield, Verified, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { colors } from '../utils/color';
 
 const getEventIcon = (type) => {
   switch (type) {
@@ -15,21 +16,6 @@ const getEventIcon = (type) => {
       return <Shield sx={{ fontSize: 28, color: '#00f0ff' }} />;
     default:
       return null;
-  }
-};
-
-const getEventColor = (type) => {
-  switch (type) {
-    case 'CERTIFICATE_ISSUED':
-      return '#00f0ff';
-    case 'REPORT_FROZEN':
-      return '#ff0055';
-    case 'EMISSIONS_UPLOADED':
-      return '#fcee0a';
-    case 'ZK_PROOF_VERIFIED':
-      return '#00f0ff';
-    default:
-      return '#0a0a0a';
   }
 };
 
@@ -50,11 +36,73 @@ const getZigzagPosition = (index) => {
   return positions[index % positions.length];
 };
 
-const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef }) => {
+const ParallaxBackground = ({ containerRef, eventCount }) => {
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+  
+  // Calculate how many repetitions we need based on event count
+  // Use a larger divisor since we want fewer, larger images covering the background
+  const repetitions = Math.max(Math.ceil((eventCount * 120) / 1000), 2);
+  
+  return (
+    <motion.div
+      style={{
+        position: 'absolute',
+        top: -200,
+        left: 0,
+        right: 0,
+        y,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        opacity: 0.1, // Very low opacity to not block content
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}
+    >
+      {Array.from({ length: repetitions }).map((_, i) => (
+        <React.Fragment key={i}>
+          <Box
+            component="img"
+            src="/assets/manga_bg_1.png"
+            sx={{
+              width: '100%',
+              maxWidth: '1200px', // Limit max width but allow full coverage on smaller screens
+              height: 'auto',
+              mb: 0,
+              filter: 'grayscale(100%)',
+              transform: i % 2 === 0 ? 'scaleX(1)' : 'scaleX(-1)',
+              objectFit: 'cover',
+            }}
+          />
+          <Box
+            component="img"
+            src="/assets/manga_bg_2.png"
+            sx={{
+              width: '100%',
+              maxWidth: '1200px',
+              height: 'auto',
+              mb: 0,
+              filter: 'grayscale(100%)',
+              transform: i % 2 === 0 ? 'scaleX(1)' : 'scaleX(-1)',
+              objectFit: 'cover',
+            }}
+          />
+        </React.Fragment>
+      ))}
+    </motion.div>
+  );
+};
+
+const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef, assignedColor }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [cubeRef, setCubeRef] = useState(null);
-  const color = getEventColor(event.type);
   const position = getZigzagPosition(index);
+  
   const updatePosition = React.useCallback(() => {
     if (!cubeRef || !containerRef?.current) return;
     const cubeRect = cubeRef.getBoundingClientRect();
@@ -144,6 +192,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
             transition: 'width 0.3s, height 0.3s',
           }}
         >
+          {/* Front Face */}
           <Box
             sx={{
               position: 'absolute',
@@ -151,7 +200,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
               height: '100%',
               bgcolor: '#ffffff',
               border: '4px solid #0a0a0a',
-              boxShadow: `8px 8px 0px ${color}`,
+              boxShadow: `8px 8px 0px ${assignedColor}`,
               transform: 'translateZ(75px)',
               display: 'flex',
               flexDirection: 'column',
@@ -235,16 +284,18 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
             </Typography>
           </Box>
 
+          {/* Back Face */}
           <Box
             sx={{
               position: 'absolute',
               width: '100%',
               height: '100%',
-              bgcolor: color,
+              bgcolor: assignedColor,
               border: '4px solid #0a0a0a',
               transform: 'translateZ(-75px) rotateY(180deg)',
             }}
           />
+          {/* Top Face */}
           <Box
             sx={{
               position: 'absolute',
@@ -256,6 +307,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
               opacity: 0.9,
             }}
           />
+          {/* Bottom Face */}
           <Box
             sx={{
               position: 'absolute',
@@ -267,6 +319,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
               opacity: 0.8,
             }}
           />
+          {/* Left Face */}
           <Box
             sx={{
               position: 'absolute',
@@ -278,6 +331,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
               opacity: 0.9,
             }}
           />
+          {/* Right Face */}
           <Box
             sx={{
               position: 'absolute',
@@ -301,6 +355,23 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
   const [positions, setPositions] = useState({});
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = React.useRef(null);
+
+  // Assign colors ensuring no two linked blocks have the same color
+  const eventColors = useMemo(() => {
+    const colorMap = {};
+    let lastColorIndex = -1;
+    
+    events.forEach(event => {
+      let newColorIndex;
+      do {
+        newColorIndex = Math.floor(Math.random() * colors.length);
+      } while (newColorIndex === lastColorIndex && colors.length > 1);
+      
+      colorMap[event._id] = colors[newColorIndex];
+      lastColorIndex = newColorIndex;
+    });
+    return colorMap;
+  }, [events]);
 
   const handlePositionChange = (id, pos) => {
     setPositions((prev) => ({ ...prev, [id]: pos }));
@@ -377,22 +448,59 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                 mt: 6,
                 pt: 4,
                 position: 'relative',
-                bgcolor: '#f7fff5',
+                bgcolor: '#1a1a1a', // Darker background for contrast
                 borderRadius: 3,
                 p: { xs: 2, md: 4 },
-                backgroundImage: `
-                  radial-gradient(circle at 10% 20%, rgba(0,200,83,0.15) 0, rgba(0,200,83,0.15) 12%, transparent 12%),
-                  radial-gradient(circle at 80% 10%, rgba(0,150,136,0.12) 0, rgba(0,150,136,0.12) 14%, transparent 14%),
-                  radial-gradient(circle at 30% 80%, rgba(76,175,80,0.18) 0, rgba(76,175,80,0.18) 16%, transparent 16%),
-                  repeating-linear-gradient(135deg, rgba(0,150,0,0.05) 0, rgba(0,150,0,0.05) 12px, transparent 12px, transparent 24px)
-                `,
+                overflow: 'hidden',
                 boxShadow: 'inset 0 0 0 3px #0a0a0a',
               }}
             >
-              <Typography variant="h5" sx={{ fontFamily: '"Bangers", sans-serif', letterSpacing: 2, textAlign: 'center', mb: 6, color: '#0a0a0a', textShadow: '2px 2px 0px #00f0ff' }}>
+              {/* Parallax Background */}
+              <ParallaxBackground containerRef={containerRef} eventCount={eventCount} />
+
+              {/* Animated Background Elements */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0.1,
+                  backgroundImage: `
+                    linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000),
+                    linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)
+                  `,
+                  backgroundSize: '20px 20px',
+                  backgroundPosition: '0 0, 10px 10px',
+                  zIndex: 0,
+                }}
+              />
+              <motion.div
+                animate={{
+                  backgroundPosition: ['0% 0%', '100% 100%'],
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
+                  backgroundSize: '30px 30px',
+                  zIndex: 0,
+                }}
+              />
+
+              <Typography variant="h5" sx={{ fontFamily: '"Bangers", sans-serif', letterSpacing: 2, textAlign: 'center', mb: 6, color: '#ffffff', textShadow: '2px 2px 0px #00f0ff', position: 'relative', zIndex: 1 }}>
                 🎮 BLOCKCHAIN MAZE 🎮
               </Typography>
-              <Typography variant="body2" sx={{ fontFamily: '"Space Grotesk", sans-serif', textAlign: 'center', mb: 4, opacity: 0.7, fontStyle: 'italic' }}>
+              <Typography variant="body2" sx={{ fontFamily: '"Space Grotesk", sans-serif', textAlign: 'center', mb: 4, color: '#cccccc', fontStyle: 'italic', position: 'relative', zIndex: 1 }}>
                 Hover over any cube to zoom and reveal details!
               </Typography>
               
@@ -401,6 +509,7 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                   perspective: '2000px', 
                   minHeight: '600px', 
                   position: 'relative',
+                  zIndex: 1,
                 }}
                 ref={containerRef}
                 onMouseMove={(e) => setMousePosition({ x: e.clientX, y: e.clientY })}
@@ -412,13 +521,28 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                     height={containerSize.height}
                     style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
                   >
+                    <defs>
+                      {events.map((event, idx) => {
+                        const next = events[idx + 1];
+                        if (!next) return null;
+                        const id = `grad-${event._id}-${next._id}`;
+                        const color1 = eventColors[event._id];
+                        const color2 = eventColors[next._id];
+                        return (
+                          <linearGradient key={id} id={id} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor={color1} />
+                            <stop offset="100%" stopColor={color2} />
+                          </linearGradient>
+                        );
+                      })}
+                    </defs>
                     {events.map((event, idx) => {
                       const next = events[idx + 1];
                       if (!next) return null;
                       const from = positions[event._id];
                       const to = positions[next._id];
                       if (!from || !to) return null;
-                      const strokeColor = getEventColor(next.type || event.type);
+                      
                       return (
                         <line
                           key={`${event._id}-${next._id}`}
@@ -426,16 +550,17 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                           y1={from.y}
                           x2={to.x}
                           y2={to.y}
-                          stroke={strokeColor}
+                          stroke={`url(#grad-${event._id}-${next._id})`}
                           strokeWidth="4"
                           strokeLinecap="round"
-                          strokeDasharray="12 8"
+                          strokeDasharray="8 8"
+                          opacity="0.8"
                         >
                           <animate
                             attributeName="stroke-dashoffset"
                             from="0"
                             to="-200"
-                            dur="4s"
+                            dur="2s"
                             repeatCount="indefinite"
                           />
                         </line>
@@ -451,6 +576,7 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                     mousePosition={mousePosition}
                     onPositionChange={handlePositionChange}
                     containerRef={containerRef}
+                    assignedColor={eventColors[event._id]}
                   />
                 ))}
               </Box>

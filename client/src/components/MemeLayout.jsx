@@ -18,46 +18,6 @@ const MemeLayout = ({ children, title, subtitle }) => {
       }}
     >
       {/* Interactive Foreground Memes */}
-      <Box sx={{ position: 'fixed', bottom: 0, right: 20, zIndex: 10, pointerEvents: 'none' }}>
-        <motion.img
-          src={ASSETS.HERO_DEV}
-          alt="Hero Dev"
-          style={{ width: '200px', height: 'auto', display: 'block' }}
-          initial={{ y: 200 }}
-          animate={{ y: 0 }}
-          transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.5 }}
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.5 }}
-          style={{
-            position: 'absolute',
-            top: -60,
-            right: 150,
-            background: '#fff',
-            border: '3px solid #0a0a0a',
-            padding: '10px',
-            borderRadius: '20px',
-            boxShadow: '5px 5px 0px #0a0a0a',
-            fontFamily: '"Permanent Marker", cursive',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          Ship it! 🚀
-        </motion.div>
-      </Box>
-
-      <Box sx={{ position: 'fixed', bottom: 0, left: 20, zIndex: 9, pointerEvents: 'none', display: { xs: 'none', md: 'block' } }}>
-        <motion.img
-          src={ASSETS.VILLAIN_BUG}
-          alt="Villain Bug"
-          style={{ width: '150px', height: 'auto', display: 'block', transform: 'scaleX(-1)' }}
-          initial={{ x: -200 }}
-          animate={{ x: 0 }}
-          transition={{ type: 'spring', stiffness: 80, damping: 20, delay: 2 }}
-        />
-      </Box>
 
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1, pt: 4 }}>
         {(title || subtitle) && (

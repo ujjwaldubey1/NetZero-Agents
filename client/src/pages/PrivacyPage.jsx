@@ -21,20 +21,33 @@ const PrivacyPage = () => {
   };
 
   return (
-    <MemeLayout title="PRIVACY / ZK DEMO" subtitle="Prove vendor emissions below threshold without revealing values.">
+    <MemeLayout
+      title="PRIVACY / ZK DEMO"
+      subtitle="Prove vendor emissions below threshold without revealing values."
+      bgPattern={`
+        conic-gradient(
+          #e0e0e0 90deg,
+          #ffffff 90deg 180deg,
+          #e0e0e0 180deg 270deg,
+          #ffffff 270deg
+        )
+      `}
+      bgSize="60px 60px"
+      sx={{ animation: 'moveDiagonal 4s linear infinite' }}
+    >
       <Card sx={{ mt: 4, bgcolor: '#ffffff', borderColor: '#00f0ff', boxShadow: '10px 10px 0px #00f0ff', position: 'relative', overflow: 'visible' }}>
-        <Box 
-          component="img" 
-          src={ASSETS.VILLAIN_BUG} 
-          sx={{ 
-            position: 'absolute', 
-            top: -40, 
-            right: -10, 
-            width: 100, 
-            transform: 'rotate(10deg)', 
+        <Box
+          component="img"
+          src={ASSETS.VILLAIN_BUG}
+          sx={{
+            position: 'absolute',
+            top: -40,
+            right: -10,
+            width: 100,
+            transform: 'rotate(10deg)',
             zIndex: 10,
             filter: 'drop-shadow(5px 5px 0px rgba(0,0,0,0.2))'
-          }} 
+          }}
         />
         <CardContent>
           <Stack spacing={2} direction={{ xs: 'column', md: 'row' }} alignItems="center">

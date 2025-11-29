@@ -10,11 +10,11 @@ export const ASSETS = {
   HERO_DEV: '/assets/comic_hero_dev_1764269045135.png',
   SIDEKICK_AI: '/assets/comic_sidekick_ai_1764269077632.png',
   VILLAIN_BUG: '/assets/comic_villain_bug_1764269061456.png',
-  
+
   // Manga Scenes
   STRESSED_MANAGER: '/assets/manga_stressed_manager_1764269444127.png',
   HERO_AWAKENING: '/assets/manga_hero_awakening_1764269459723.png',
-  
+
   // Actions
   BLOCK_PUSHING: '/assets/character_pushing_block_1764269597732.png',
 
@@ -29,6 +29,9 @@ export const ASSETS = {
   ANIME_IRONMAN: '/assets/anime_ironman.jpg',
   ANIME_ROBOT: '/assets/anime_robot.jpg',
   CARDANO_MEME: '/assets/cardano_logo.png',
+  HOSKY_MEME: '/assets/Hosky.webp',
+  SNAKE_MEME:'/assets/snake_meme.webp',
+  FROGGY_MEME:'/assets/froggy.jpeg',
 };
 
 export default ASSETS;

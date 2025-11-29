@@ -22,7 +22,7 @@ const LoginPage = () => {
         stagger: 0.2,
         ease: "back.out(1.7)"
       });
-      
+
       gsap.from(".hero-text", {
         x: -100,
         opacity: 0,
@@ -31,7 +31,7 @@ const LoginPage = () => {
         ease: "power3.out"
       });
     }, containerRef);
-    
+
     return () => ctx.revert();
   }, []);
 
@@ -61,7 +61,11 @@ const LoginPage = () => {
         justifyContent: 'center',
         overflow: 'hidden',
         position: 'relative',
-        background: 'radial-gradient(circle at 50% 50%, #ffffff 0%, #f0f0f0 100%)',
+        background: `
+          radial-gradient(circle at 50% 50%, #e0e0e0 2px, transparent 2.5px)
+        `,
+        backgroundSize: '30px 30px',
+        animation: 'pulseSize 4s ease-in-out infinite',
       }}
     >
       {/* Background Decor */}
@@ -121,7 +125,7 @@ const LoginPage = () => {
               <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', transform: 'rotate(-1deg)' }}>
                 IDENTITY VERIFICATION
               </Typography>
-              
+
               <Box component="form" onSubmit={handle} display="flex" flexDirection="column" gap={3}>
                 <TextField
                   label="AGENT ID (EMAIL)"
@@ -143,15 +147,15 @@ const LoginPage = () => {
                   variant="outlined"
                   InputLabelProps={{ style: { fontFamily: '"Bebas Neue", sans-serif', letterSpacing: '1px' } }}
                 />
-                
+
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    type="submit" 
-                    variant="contained" 
-                    fullWidth 
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    fullWidth
                     size="large"
-                    sx={{ 
-                      py: 1.5, 
+                    sx={{
+                      py: 1.5,
                       fontSize: '1.5rem',
                       bgcolor: '#00f0ff',
                       color: '#0a0a0a',
@@ -168,7 +172,7 @@ const LoginPage = () => {
                   </Button>
                 </motion.div>
               </Box>
-              
+
               {error && (
                 <Alert severity="error" sx={{ mt: 2, border: '2px solid #0a0a0a', borderRadius: 0, fontWeight: 'bold' }}>
                   {error}

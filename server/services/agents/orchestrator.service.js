@@ -24,6 +24,7 @@ import {
   getAgentIdentities,
   isMasumiEnabled,
 } from '../masumi.service.js';
+import { uploadToIPFS } from '../ipfs.service.js';
 
 /**
  * Master Orchestrator - Coordinates all agents and produces unified report
@@ -309,19 +310,155 @@ export const orchestrateAnalysis = async (datacenterName, period) => {
     console.log(`📊 Total Masumi transactions: ${masumiTransactions.length}`);
 
     // ===========================================================
-    // EXPECTED FINAL OUTPUT
+    // IPFS UPLOAD - Final Report Bundle & Evidence Package
+    // ===========================================================
+    
+    let ipfsLinks = {};
+    
+    try {
+      // Prepare final report bundle (complete response without IPFS links)
+      const reportBundle = {
+        success: true,
+        datacenter: datacenterName,
+        period: normalizedPeriod,
+        vendors_summary: vendorsResult,
+        carbon_credit_summary: carbonCreditsResult,
+        staff_summary: staffResult,
+        cryptographic_proofs: cryptographicProofs,
+        masumi_transactions: masumiTransactions,
+        final_report: unifiedReport,
+        generatedAt: new Date().toISOString(),
+      };
+      
+      // Upload report bundle to IPFS
+      console.log('📤 [IPFS] Uploading final report bundle to IPFS...');
+      const reportBundleBuffer = Buffer.from(JSON.stringify(reportBundle, null, 2), 'utf-8');
+      const reportBundleUpload = await uploadToIPFS(
+        reportBundleBuffer,
+        `netzero-report-${datacenterName}-${normalizedPeriod}-${Date.now()}.json`
+      ).catch(err => {
+        console.warn('⚠️  Report bundle IPFS upload failed:', err.message);
+        return null;
+      });
+      
+      if (reportBundleUpload) {
+        ipfsLinks.report_bundle = reportBundleUpload.ipfsUrl;
+        ipfsLinks.gateway_urls = ipfsLinks.gateway_urls || {};
+        ipfsLinks.gateway_urls.report = reportBundleUpload.gatewayUrl;
+        console.log(`✅ [IPFS] Report bundle uploaded: ${reportBundleUpload.cid}`);
+      }
+      
+      // Upload evidence package (all evidence items)
+      console.log('📤 [IPFS] Uploading evidence package to IPFS...');
+      const evidencePackage = {
+        datacenter: datacenterName,
+        period: normalizedPeriod,
+        evidence_items: allEvidenceItems,
+        evidence_hashes: cryptographicProofs.evidence_hashes,
+        evidence_merkle_root: cryptographicProofs.evidence_merkle_root,
+        generatedAt: new Date().toISOString(),
+      };
+      
+      const evidenceBuffer = Buffer.from(JSON.stringify(evidencePackage, null, 2), 'utf-8');
+      const evidenceUpload = await uploadToIPFS(
+        evidenceBuffer,
+        `netzero-evidence-${datacenterName}-${normalizedPeriod}-${Date.now()}.json`
+      ).catch(err => {
+        console.warn('⚠️  Evidence package IPFS upload failed:', err.message);
+        return null;
+      });
+      
+      if (evidenceUpload) {
+        ipfsLinks.evidence_package = evidenceUpload.ipfsUrl;
+        ipfsLinks.gateway_urls = ipfsLinks.gateway_urls || {};
+        ipfsLinks.gateway_urls.evidence = evidenceUpload.gatewayUrl;
+        console.log(`✅ [IPFS] Evidence package uploaded: ${evidenceUpload.cid}`);
+      }
+    } catch (ipfsError) {
+      console.warn('⚠️  IPFS uploads failed (non-critical):', ipfsError.message);
+      // Continue without IPFS links - not critical for core functionality
+    }
+
+    // ===========================================================
+    // UI PAYLOAD GENERATION - Format data for React frontend
+    // ===========================================================
+    
+    const uiPayload = generateUIPayload({
+      vendorsResult,
+      carbonCreditsResult,
+      staffResult,
+      cryptographicProofs,
+      masumiTransactions,
+      datacenterName,
+      normalizedPeriod,
+    });
+
+    // ===========================================================
+    // ANOMALIES SUMMARY
+    // ===========================================================
+    
+    const anomalies = [];
+    
+    // Collect vendor anomalies
+    if (vendorsResult.vendors) {
+      vendorsResult.vendors.forEach(vendor => {
+        if (vendor.anomalies && vendor.anomalies.length > 0) {
+          vendor.anomalies.forEach(anomaly => {
+            anomalies.push({
+              type: anomaly.type,
+              reason: anomaly.reason,
+              agent: 'vendor_agent',
+              vendor: vendor.name || vendor.email,
+              severity: anomaly.severity || 'medium',
+            });
+          });
+        }
+      });
+    }
+    
+    // Collect staff anomalies
+    if (staffResult.staff?.scope1?.anomalies) {
+      staffResult.staff.scope1.anomalies.forEach(anomaly => {
+        anomalies.push({
+          type: anomaly.type,
+          reason: anomaly.reason,
+          agent: 'staff_scope1_agent',
+          scope: 'scope1',
+          severity: anomaly.severity || 'medium',
+        });
+      });
+    }
+    
+    if (staffResult.staff?.scope2?.anomalies) {
+      staffResult.staff.scope2.anomalies.forEach(anomaly => {
+        anomalies.push({
+          type: anomaly.type,
+          reason: anomaly.reason,
+          agent: 'staff_scope2_agent',
+          scope: 'scope2',
+          severity: anomaly.severity || 'medium',
+        });
+      });
+    }
+
+    // ===========================================================
+    // EXPECTED FINAL OUTPUT - Full Specification Format
     // ===========================================================
 
     return {
+      status: 'success',
       success: true,
       datacenter: datacenterName,
       period: normalizedPeriod,
       vendors_summary: vendorsResult,
       carbon_credit_summary: carbonCreditsResult,
       staff_summary: staffResult,
+      anomalies: anomalies,
       cryptographic_proofs: cryptographicProofs,
+      ipfs_links: Object.keys(ipfsLinks).length > 0 ? ipfsLinks : undefined,
       masumi_transactions: masumiTransactions,
       final_report: unifiedReport,
+      ui_payload: uiPayload,
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
@@ -638,4 +775,159 @@ const normalizePeriod = (period) => {
 
   console.warn(`Could not normalize period format: ${period}. Using as-is.`);
   return period;
+};
+
+/**
+ * Generate UI-ready payload for React frontend components
+ * Formats data for charts, timelines, tables, and visualizations
+ */
+const generateUIPayload = ({
+  vendorsResult,
+  carbonCreditsResult,
+  staffResult,
+  cryptographicProofs,
+  masumiTransactions,
+  datacenterName,
+  normalizedPeriod,
+}) => {
+  // Charts data for emissions visualization
+  const charts = {
+    emissions_by_scope: {
+      scope1: parseFloat(staffResult.staff?.scope1?.total_co2e) || 0,
+      scope2: parseFloat(staffResult.staff?.scope2?.total_co2e) || 0,
+      scope3: parseFloat(vendorsResult.summary?.total_scope3) || 0,
+      total: (parseFloat(staffResult.staff?.scope1?.total_co2e) || 0) +
+             (parseFloat(staffResult.staff?.scope2?.total_co2e) || 0) +
+             (parseFloat(vendorsResult.summary?.total_scope3) || 0),
+    },
+    vendor_comparison: vendorsResult.vendors?.map(vendor => ({
+      name: vendor.name || vendor.email,
+      current: parseFloat(vendor.scope3_comparison?.current_quarter) || 0,
+      previous: parseFloat(vendor.scope3_comparison?.previous_quarter) || 0,
+      anomalies: vendor.anomalies?.length || 0,
+    })) || [],
+    anomaly_timeline: [],
+    compliance_status: {
+      carbon_credits: carbonCreditsResult.carbon_credits?.compliance_status || 'unknown',
+      credit_score: carbonCreditsResult.carbon_credits?.credit_score || 'unknown',
+      threshold: carbonCreditsResult.carbon_credits?.latest_threshold || 'N/A',
+    },
+  };
+
+  // Timeline data for blockchain visualization
+  const timeline = masumiTransactions.map(tx => ({
+    timestamp: tx.timestamp,
+    event: tx.type,
+    agent: tx.agentId,
+    txId: tx.txId,
+    amount: tx.amount || null,
+    action: tx.action || null,
+  }));
+
+  // Block visualization data (grouped by agent)
+  const blocks = [];
+  const agentGroups = {};
+  
+  masumiTransactions.forEach(tx => {
+    if (!agentGroups[tx.agentId]) {
+      agentGroups[tx.agentId] = {
+        agentId: tx.agentId,
+        transactions: [],
+      };
+    }
+    agentGroups[tx.agentId].transactions.push({
+      type: tx.type,
+      txId: tx.txId,
+      timestamp: tx.timestamp,
+      amount: tx.amount,
+    });
+  });
+  
+  Object.values(agentGroups).forEach(group => {
+    blocks.push({
+      hash: cryptographicProofs.evidence_merkle_root,
+      parent: null,
+      timestamp: group.transactions[0]?.timestamp,
+      agent: group.agentId,
+      transactions: group.transactions,
+    });
+  });
+
+  // Table data for React components
+  const tables = {
+    vendors: vendorsResult.vendors?.map(vendor => ({
+      name: vendor.name || vendor.email,
+      email: vendor.email,
+      scope3_current: vendor.scope3_comparison?.current_quarter || 'N/A',
+      scope3_previous: vendor.scope3_comparison?.previous_quarter || 'N/A',
+      anomalies_count: vendor.anomalies?.length || 0,
+      anomalies: vendor.anomalies || [],
+      status: vendor.status || 'pending',
+      attested: vendor.attested || false,
+    })) || [],
+    emissions: [
+      {
+        scope: 'Scope 1',
+        total_co2e: parseFloat(staffResult.staff?.scope1?.total_co2e) || 0,
+        anomalies: staffResult.staff?.scope1?.anomalies?.length || 0,
+        comparison: staffResult.staff?.scope1?.comparison || {},
+      },
+      {
+        scope: 'Scope 2',
+        total_co2e: parseFloat(staffResult.staff?.scope2?.total_co2e) || 0,
+        anomalies: staffResult.staff?.scope2?.anomalies?.length || 0,
+        comparison: staffResult.staff?.scope2?.comparison || {},
+      },
+      {
+        scope: 'Scope 3',
+        total_co2e: parseFloat(vendorsResult.summary?.total_scope3) || 0,
+        anomalies: vendorsResult.summary?.total_anomalies || 0,
+        comparison: {},
+      },
+    ],
+    anomalies: [],
+  };
+
+  // Populate anomalies table
+  vendorsResult.vendors?.forEach(vendor => {
+    vendor.anomalies?.forEach(anomaly => {
+      tables.anomalies.push({
+        type: anomaly.type,
+        reason: anomaly.reason,
+        agent: 'vendor_agent',
+        vendor: vendor.name || vendor.email,
+        severity: anomaly.severity || 'medium',
+        timestamp: new Date().toISOString(),
+      });
+    });
+  });
+
+  staffResult.staff?.scope1?.anomalies?.forEach(anomaly => {
+    tables.anomalies.push({
+      type: anomaly.type,
+      reason: anomaly.reason,
+      agent: 'staff_scope1_agent',
+      scope: 'scope1',
+      severity: anomaly.severity || 'medium',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  staffResult.staff?.scope2?.anomalies?.forEach(anomaly => {
+    tables.anomalies.push({
+      type: anomaly.type,
+      reason: anomaly.reason,
+      agent: 'staff_scope2_agent',
+      scope: 'scope2',
+      severity: anomaly.severity || 'medium',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  return {
+    charts,
+    timeline,
+    blocks,
+    tables,
+  };
 };

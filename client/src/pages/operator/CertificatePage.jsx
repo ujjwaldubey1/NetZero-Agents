@@ -32,7 +32,13 @@ const CertificatePage = () => {
   };
 
   return (
-    <MemeLayout title="CERTIFICATES" subtitle="Mint proof of compliance on Cardano.">
+    <MemeLayout
+      title="CERTIFICATES"
+      subtitle="Mint proof of compliance on Cardano."
+      bgPattern="repeating-linear-gradient(90deg, #f0f0f0, #f0f0f0 1px, transparent 1px, transparent 20px)"
+      bgSize="20px 20px"
+      sx={{ animation: 'moveHorizontal 20s linear infinite' }}
+    >
       {message && <Alert sx={{ mt: 2, bgcolor: '#00f0ff', color: '#000', border: '2px solid #000' }}>{message}</Alert>}
       {error && <Alert severity="error" sx={{ mt: 2, bgcolor: '#ff0055', color: '#fff', border: '2px solid #0a0a0a' }}>{error}</Alert>}
       
