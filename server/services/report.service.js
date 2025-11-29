@@ -32,7 +32,7 @@ const getLlm = () => {
  * @param {string} ownerId - Owner/User ID
  * @returns {Promise<string>} - Facility ID
  */
-const getFacilityIdFromOwner = async (ownerId) => {
+export const getFacilityIdFromOwner = async (ownerId) => {
   // Try to find a data center owned by this user
   const dataCenter = await DataCenter.findOne({ ownerId }).sort({ createdAt: -1 });
   if (dataCenter) {

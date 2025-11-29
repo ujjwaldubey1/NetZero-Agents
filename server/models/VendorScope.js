@@ -67,6 +67,19 @@ const VendorScopeSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    scope3Files: {
+      type: [
+        {
+          filename: { type: String, required: true },
+          storedPath: { type: String, required: true },
+          uploadedAt: { type: Date, default: Date.now },
+          type: { type: String, required: true }, // mimetype
+          originalName: { type: String },
+          size: { type: Number },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

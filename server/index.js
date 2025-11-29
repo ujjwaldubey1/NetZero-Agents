@@ -16,6 +16,7 @@ import uploadRoutes from './routes/upload.routes.js';
 import zkRoutes from './routes/zk.routes.js';
 import blockchainRoutes from './routes/blockchain.routes.js';
 import vendorScopeRoutes from './routes/vendorScope.routes.js';
+import uploadBlockStorageRoutes from './routes/uploadBlockStorage.routes.js';
 
 // Legacy routes (kept for backwards compatibility)
 import emissionRoutes from './routes/emissions.js';
@@ -71,7 +72,8 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/upload', uploadRoutes(upload));
+app.use('/api/upload', uploadRoutes(upload)); // Legacy upload routes (kept for backward compatibility)
+app.use('/api/upload', uploadBlockStorageRoutes); // New blockStorage upload routes (/api/upload/staff, /api/upload/vendor)
 app.use('/api/zk', zkRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/vendor-scope', vendorScopeRoutes);
