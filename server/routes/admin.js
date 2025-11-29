@@ -22,9 +22,19 @@ router.post('/staff', adminOperatorStaff, async (req, res) => {
   const { email, password } = req.body;
   const existing = await User.findOne({ email });
   if (existing) return res.status(400).json({ error: 'Email exists' });
-  const passwordHash = await bcrypt.hash(password, 10);
+  const chosenPassword = password || 'password123';
+  const passwordHash = await bcrypt.hash(chosenPassword, 10);
   const staff = new User({ email, passwordHash, role: 'staff' });
   await staff.save();
+
+  const frontendBase = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const loginUrl = `${frontendBase.replace(/\/$/, '')}/login`;
+  await sendEmail({
+    to: email,
+    subject: 'Your staff account is ready',
+    text: `Hi,\n\nA staff account has been created for you.\n\nEmail: ${email}\nPassword: ${chosenPassword}\nLogin: ${loginUrl}\n\nIf you did not expect this, you can ignore the email.\n\nThanks,\nNetZero Agents`,
+  });
+
   res.json(staff);
 });
 
