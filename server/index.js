@@ -15,6 +15,7 @@ import reportRoutes from './routes/report.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import zkRoutes from './routes/zk.routes.js';
 import blockchainRoutes from './routes/blockchain.routes.js';
+import vendorScopeRoutes from './routes/vendorScope.routes.js';
 
 // Legacy routes (kept for backwards compatibility)
 import emissionRoutes from './routes/emissions.js';
@@ -73,6 +74,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes(upload));
 app.use('/api/zk', zkRoutes);
 app.use('/api/blockchain', blockchainRoutes);
+app.use('/api/vendor-scope', vendorScopeRoutes);
 
 // Legacy routes (maintained for backwards compatibility)
 app.use('/api/emissions', emissionRoutes(upload));

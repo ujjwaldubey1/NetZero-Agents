@@ -1,0 +1,368 @@
+{
+  "info": {
+    "name": "NetZero Agents API",
+    "description": "API collection for NetZero Agents - Testing Models and Routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Server Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('User registered successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"operator@demo.com\",\n  \"password\": \"password123\",\n  \"role\": \"operator\",\n  \"organizationName\": \"Demo Organization\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    console.log('Token saved:', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"operator@demo.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/current?period=2024-Q4",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "current"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "2024-Q4"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Report (Test New Model)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityId\": \"facility-001\",\n  \"period\": \"2024-Q4\",\n  \"scope1\": {\n    \"diesel_liters\": 1000,\n    \"diesel_co2_tons\": 2.68\n  },\n  \"scope2\": {\n    \"electricity_kwh\": 5000,\n    \"electricity_co2_tons\": 2.0\n  },\n  \"scope3\": {\n    \"upstream_co2_tons\": 5.0\n  },\n  \"totalCO2e\": 9.68,\n  \"reportHash\": \"a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2\",\n  \"merkleRoot\": \"1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3\",\n  \"status\": \"pending\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "create"]
+            },
+            "description": "Create a new report using the new Report model. Note: You may need to add this route first."
+          }
+        },
+        {
+          "name": "Freeze Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"period\": \"2024-Q4\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/freeze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "freeze"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor Scope",
+      "item": [
+        {
+          "name": "Create Vendor Scope",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorEmail\": \"vendor@demo.com\",\n  \"facilityId\": \"facility-001\",\n  \"period\": \"2024-Q4\",\n  \"data\": {\n    \"scope3\": {\n      \"upstream_co2_tons\": 3.5,\n      \"transport_co2_tons\": 1.2\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", "create"]
+            },
+            "description": "Create a new vendor scope entry. Note: Route needs to be created first."
+          }
+        },
+        {
+          "name": "Get All Vendor Scopes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope"]
+            }
+          }
+        },
+        {
+          "name": "Vendor Attest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/:id/attest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", ":id", "attest"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "VENDOR_SCOPE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Approve",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Looks good, approved!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/:id/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "VENDOR_SCOPE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Reject",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Please revise the scope 3 data.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/:id/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", ":id", "reject"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "VENDOR_SCOPE_ID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Database Test",
+      "item": [
+        {
+          "name": "Test DB Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/test/db",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "db"]
+            },
+            "description": "Test MongoDB connection. May need to create this route first."
+          }
+        }
+      ]
+    }
+  ]
+}
+

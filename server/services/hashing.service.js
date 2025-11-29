@@ -44,3 +44,6 @@ export const createCommitment = (value, threshold) => {
     .digest('hex');
 };
 
+// Export hashData for use in other modules
+// export { hashData };
+
