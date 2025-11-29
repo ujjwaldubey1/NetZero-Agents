@@ -31,6 +31,12 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=no-reply@netzero.local
+
+# Masumi Blockchain Integration (optional)
+MASUMI_ENABLED=false
+MASUMI_API_URL=https://api.masumi.network/v1
+MASUMI_NETWORK_ID=masumi-testnet
+MASUMI_MASTER_WALLET=
 `;
 
 try {

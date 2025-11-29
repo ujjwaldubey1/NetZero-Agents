@@ -4,8 +4,8 @@
  */
 
 import { orchestrateAnalysis } from '../services/agents/orchestrator.service.js';
-import { freezeDataAndGenerateProofs } from '../services/dataFreeze.service.js';
 import AuditLog from '../models/AuditLog.js';
+import { isMasumiEnabled } from '../services/masumi.service.js';
 
 /**
  * Generate comprehensive emissions analysis report
@@ -33,22 +33,8 @@ export const analyzeEmissions = async (req, res) => {
 
     console.log(`🎯 Analysis request: ${datacenterName}, Period: ${period}`);
 
-    // Trigger orchestrator
+    // Trigger orchestrator (now includes Pillar 2 and 3 integration)
     const result = await orchestrateAnalysis(datacenterName, period);
-
-    // Freeze data and generate cryptographic proofs
-    console.log('🔒 Freezing data and generating cryptographic proofs...');
-    let cryptographicProofs = null;
-    try {
-      cryptographicProofs = freezeDataAndGenerateProofs(result);
-      console.log('✅ Cryptographic proofs generated:');
-      console.log(`   Report Hash: ${cryptographicProofs.report_hash.substring(0, 16)}...`);
-      console.log(`   Evidence Items: ${cryptographicProofs.evidence_hashes.length}`);
-      console.log(`   Merkle Root: ${cryptographicProofs.evidence_merkle_root.substring(0, 16)}...`);
-    } catch (freezeError) {
-      console.error('⚠️  Data freeze failed:', freezeError.message);
-      // Continue even if freeze fails - don't block the response
-    }
 
     // Log audit event
     await AuditLog.logInfo({
@@ -57,21 +43,20 @@ export const analyzeEmissions = async (req, res) => {
         datacenterName,
         period,
         vendorCount: result.vendors_summary?.vendors?.length || 0,
-        totalAnomalies: (result.vendors_summary?.vendors?.reduce((sum, v) => sum + (v.anomalies?.length || 0), 0) || 0) +
-                       (result.staff_summary?.staff?.scope1?.anomalies?.length || 0) +
-                       (result.staff_summary?.staff?.scope2?.anomalies?.length || 0),
-        reportHash: cryptographicProofs?.report_hash || null,
-        merkleRoot: cryptographicProofs?.evidence_merkle_root || null,
+        totalAnomalies:
+          (result.vendors_summary?.vendors?.reduce((sum, v) => sum + (v.anomalies?.length || 0), 0) || 0) +
+          (result.staff_summary?.staff?.scope1?.anomalies?.length || 0) +
+          (result.staff_summary?.staff?.scope2?.anomalies?.length || 0),
+        reportHash: result.cryptographic_proofs?.report_hash || null,
+        merkleRoot: result.cryptographic_proofs?.evidence_merkle_root || null,
+        masumiTransactionCount: result.masumi_transactions?.length || 0,
       },
       user: req.user?.email || req.user?.id?.toString() || 'anonymous',
       entityId: result.datacenter || datacenterName,
     }).catch((err) => console.error('Audit log error:', err));
 
-    res.status(200).json({
-      success: true,
-      ...result,
-      cryptographic_proofs: cryptographicProofs, // Include cryptographic proofs in response
-    });
+    // Result already includes cryptographic_proofs and masumi_transactions
+    res.status(200).json(result);
   } catch (error) {
     console.error('❌ Orchestrator analysis error:', error);
 
@@ -102,23 +87,38 @@ export const getOrchestratorStatus = async (req, res) => {
     const hasGeminiKey = !!process.env.GEMINI_API_KEY;
     const hasOpenAIKey = !!process.env.OPENAI_API_KEY;
     const hasLLM = hasGeminiKey || hasOpenAIKey;
+    const masumiEnabled = isMasumiEnabled();
     
     res.json({
       success: true,
       service: 'AI Data Extraction and Analysis Orchestrator',
+      architecture: 'Four-Pillar (AI Agents + Integrity + Masumi Blockchain + Master Agent)',
       status: 'operational',
       llm_provider: hasGeminiKey ? 'Gemini' : hasOpenAIKey ? 'OpenAI (Fallback)' : 'None',
       llm_configured: hasLLM,
       llm_model: process.env.GEMINI_MODEL || process.env.LLM_MODEL || 'Not configured',
+      masumi_blockchain: {
+        enabled: masumiEnabled,
+        api_url: process.env.MASUMI_API_URL || 'Not configured',
+        network: process.env.MASUMI_NETWORK_ID || 'Not configured',
+      },
       agents: {
         vendor_agent: 'available',
         carbon_credits_agent: 'available',
         staff_agent: 'available',
         scope1_agent: 'available',
         scope2_agent: 'available',
+        merkle_agent: 'available',
+        master_orchestrator: 'available',
+      },
+      pillars: {
+        pillar1_ai_agents: 'operational',
+        pillar2_integrity_layer: 'operational',
+        pillar3_masumi_blockchain: masumiEnabled ? 'operational' : 'disabled',
+        pillar4_master_agent: 'operational',
       },
       message: hasLLM 
-        ? `All agents are operational and ready for analysis (using ${hasGeminiKey ? 'Gemini' : 'OpenAI'})`
+        ? `All agents are operational and ready for analysis (using ${hasGeminiKey ? 'Gemini' : 'OpenAI'})${masumiEnabled ? ' with Masumi blockchain integration' : ''}`
         : 'LLM not configured. Set GEMINI_API_KEY or OPENAI_API_KEY. Analysis will use fallback methods.',
     });
   } catch (error) {
