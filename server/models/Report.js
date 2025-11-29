@@ -65,6 +65,32 @@ const ReportSchema = new mongoose.Schema(
       },
       default: 'pending',
     },
+    scope1Files: {
+      type: [
+        {
+          filename: { type: String, required: true },
+          storedPath: { type: String, required: true },
+          uploadedAt: { type: Date, default: Date.now },
+          type: { type: String, required: true }, // mimetype
+          originalName: { type: String },
+          size: { type: Number },
+        },
+      ],
+      default: [],
+    },
+    scope2Files: {
+      type: [
+        {
+          filename: { type: String, required: true },
+          storedPath: { type: String, required: true },
+          uploadedAt: { type: Date, default: Date.now },
+          type: { type: String, required: true }, // mimetype
+          originalName: { type: String },
+          size: { type: Number },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

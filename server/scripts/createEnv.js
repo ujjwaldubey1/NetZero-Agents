@@ -17,7 +17,12 @@ CORS_ORIGIN=*
 # JWT Authentication
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 
-# OpenAI API Configuration (optional)
+# LLM Configuration - Gemini (Primary) or OpenAI (Fallback)
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-1.5-pro
+# Optional: Custom Gemini endpoint (OpenAI-compatible)
+GEMINI_BASE_URL=
+# Fallback: OpenAI API (optional)
 OPENAI_API_KEY=
 
 # Email Configuration (optional)
@@ -26,6 +31,12 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=no-reply@netzero.local
+
+# Masumi Blockchain Integration (optional)
+MASUMI_ENABLED=false
+MASUMI_API_URL=https://api.masumi.network/v1
+MASUMI_NETWORK_ID=masumi-testnet
+MASUMI_MASTER_WALLET=
 `;
 
 try {

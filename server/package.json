@@ -12,11 +12,13 @@
   "dependencies": {
     "@langchain/core": "^0.3.30",
     "@langchain/openai": "^0.3.17",
+    "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "bull": "^4.16.5",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
+    "form-data": "^4.0.2",
     "ipfs-http-client": "^60.0.1",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.2.16",

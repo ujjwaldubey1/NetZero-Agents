@@ -1,0 +1,1546 @@
+{
+  "info": {
+    "name": "NetZero Agents API",
+    "description": "API collection for NetZero Agents - Testing Models and Routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "datacenterId",
+      "value": "",
+      "type": "string",
+      "description": "Data center ID for uploads"
+    },
+    {
+      "key": "lastUploadedFile",
+      "value": "",
+      "type": "string",
+      "description": "Last uploaded file metadata (JSON string)"
+    },
+    {
+      "key": "lastVendorScopeId",
+      "value": "",
+      "type": "string",
+      "description": "Last vendor scope ID from upload"
+    },
+    {
+      "key": "lastIPFSCid",
+      "value": "",
+      "type": "string",
+      "description": "Last IPFS CID from upload"
+    },
+    {
+      "key": "lastAnalysisPeriod",
+      "value": "",
+      "type": "string",
+      "description": "Last analyzed period (e.g., 2025-Q1)"
+    },
+    {
+      "key": "lastAnalysisDatacenter",
+      "value": "",
+      "type": "string",
+      "description": "Last analyzed datacenter name"
+    },
+    {
+      "key": "lastReportHash",
+      "value": "",
+      "type": "string",
+      "description": "Last generated report hash (SHA-256)"
+    },
+    {
+      "key": "lastMerkleRoot",
+      "value": "",
+      "type": "string",
+      "description": "Last generated Merkle root hash (SHA-256)"
+    },
+    {
+      "key": "lastEvidenceHashes",
+      "value": "",
+      "type": "string",
+      "description": "Last generated evidence hashes (JSON array as string)"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Server Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('User registered successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"operator@demo.com\",\n  \"password\": \"password123\",\n  \"role\": \"operator\",\n  \"organizationName\": \"Demo Organization\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    console.log('Token saved:', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"operator@demo.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/current?period=2024-Q4",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "current"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "2024-Q4"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Report (Test New Model)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"facilityId\": \"facility-001\",\n  \"period\": \"2024-Q4\",\n  \"scope1\": {\n    \"diesel_liters\": 1000,\n    \"diesel_co2_tons\": 2.68\n  },\n  \"scope2\": {\n    \"electricity_kwh\": 5000,\n    \"electricity_co2_tons\": 2.0\n  },\n  \"scope3\": {\n    \"upstream_co2_tons\": 5.0\n  },\n  \"totalCO2e\": 9.68,\n  \"reportHash\": \"a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2\",\n  \"merkleRoot\": \"1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3\",\n  \"status\": \"pending\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "create"]
+            },
+            "description": "Create a new report using the new Report model. Note: You may need to add this route first."
+          }
+        },
+        {
+          "name": "Freeze Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"period\": \"2024-Q4\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/freeze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "freeze"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor Scope",
+      "item": [
+        {
+          "name": "Create Vendor Scope",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorEmail\": \"vendor@demo.com\",\n  \"facilityId\": \"facility-001\",\n  \"period\": \"2024-Q4\",\n  \"data\": {\n    \"scope3\": {\n      \"upstream_co2_tons\": 3.5,\n      \"transport_co2_tons\": 1.2\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", "create"]
+            },
+            "description": "Create a new vendor scope entry. Note: Route needs to be created first."
+          }
+        },
+        {
+          "name": "Get All Vendor Scopes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope"]
+            }
+          }
+        },
+        {
+          "name": "Vendor Attest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/:id/attest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", ":id", "attest"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "VENDOR_SCOPE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Approve",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Looks good, approved!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/:id/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "VENDOR_SCOPE_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin Reject",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comments\": \"Please revise the scope 3 data.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vendor-scope/:id/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vendor-scope", ":id", "reject"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "VENDOR_SCOPE_ID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "File Uploads (BlockStorage)",
+      "item": [
+        {
+          "name": "Staff Upload - Scope1/Scope2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('File uploaded successfully:', response.file.originalName);",
+                  "    console.log('Stored path:', response.file.storedPath);",
+                  "    pm.collectionVariables.set('lastUploadedFile', JSON.stringify(response.file));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "PDF or Excel file to upload (scope1 or scope2)"
+                },
+                {
+                  "key": "scope",
+                  "value": "scope1",
+                  "type": "text",
+                  "description": "Must be 'scope1' or 'scope2'"
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text",
+                  "description": "Period in format YYYY-QN (e.g., 2025-Q1). Optional - defaults to current quarter."
+                },
+                {
+                  "key": "datacenterId",
+                  "value": "{{datacenterId}}",
+                  "type": "text",
+                  "description": "Data center ID (optional - uses user's default if not provided). Set the 'datacenterId' collection variable to use it here."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "staff"]
+            },
+            "description": "Upload file for staff members. Allowed scopes: scope1, scope2 only. Allowed file types: PDF (.pdf), Excel (.xls, .xlsx). Max file size: 50 MB."
+          }
+        },
+        {
+          "name": "Staff Upload - Scope2 Example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('File uploaded successfully:', response.file.originalName);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "PDF or Excel file for scope2"
+                },
+                {
+                  "key": "scope",
+                  "value": "scope2",
+                  "type": "text",
+                  "description": "Scope2 upload"
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "staff"]
+            },
+            "description": "Example request for scope2 upload by staff"
+          }
+        },
+        {
+          "name": "Vendor Upload - Scope3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('Vendor file uploaded successfully:', response.file.originalName);",
+                  "    console.log('Vendor scope ID:', response.vendorScope.id);",
+                  "    console.log('Status:', response.vendorScope.status);",
+                  "    pm.collectionVariables.set('lastVendorScopeId', response.vendorScope.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "File to upload (PDF, Excel, CSV, ZIP, or Image). Vendors can only upload scope3 files."
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text",
+                  "description": "Period in format YYYY-QN (e.g., 2025-Q1). Optional - defaults to current quarter."
+                },
+                {
+                  "key": "datacenterId",
+                  "value": "{{datacenterId}}",
+                  "type": "text",
+                  "description": "Data center ID (optional - uses user's default if not provided). Set the 'datacenterId' collection variable to use it here."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/vendor",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "vendor"]
+            },
+            "description": "Upload file for vendors. Only scope3 is allowed. Allowed file types: PDF, Excel (.xls, .xlsx), CSV, ZIP, Images (.jpg, .png). Max file size: 50 MB. Note: Scope is automatically set to scope3 for vendor uploads."
+          }
+        },
+        {
+          "name": "Vendor Upload - CSV Example",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    console.log('CSV file uploaded successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "CSV file for scope3 data"
+                },
+                {
+                  "key": "period",
+                  "value": "2025-Q1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/vendor",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "vendor"]
+            },
+            "description": "Example request for vendor CSV upload (scope3)"
+          }
+        }
+      ],
+      "description": "BlockStorage file upload endpoints for staff (scope1/scope2) and vendor (scope3) file uploads. Files are stored in the blockStorage directory structure."
+    },
+    {
+      "name": "IPFS (Pinata) - File Upload & Retrieval",
+      "item": [
+        {
+          "name": "IPFS Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('IPFS Service Status:', response.configured ? '✅ Configured' : '⚠️ Not Configured');",
+                  "    console.log('Auth Method:', response.authMethod);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "health"]
+            },
+            "description": "Check if IPFS (Pinata) service is configured and ready. Verify PINATA_JWT or PINATA_API_KEY/PINATA_SECRET_KEY are set in .env"
+          }
+        },
+        {
+          "name": "Upload File to IPFS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.cid) {",
+                  "        console.log('✅ File uploaded to IPFS successfully');",
+                  "        console.log('CID:', response.data.cid);",
+                  "        console.log('IPFS URL:', response.data.ipfsUrl);",
+                  "        console.log('Gateway URL:', response.data.gatewayUrl);",
+                  "        console.log('File Size:', response.data.size, 'bytes');",
+                  "        pm.collectionVariables.set('lastIPFSCid', response.data.cid);",
+                  "        console.log('💾 Saved CID to collection variable: lastIPFSCid');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "File to upload to IPFS (PDF, Excel, Images, etc.) - Max 50MB"
+                },
+                {
+                  "key": "fileName",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional: Custom filename (defaults to original filename)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "upload"]
+            },
+            "description": "Upload a file to IPFS via Pinata. Files are automatically pinned. Returns CID, IPFS URL, and gateway URL. Max file size: 50MB."
+          }
+        },
+        {
+          "name": "Get IPFS File Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('IPFS File Info:');",
+                  "    console.log('CID:', response.cid);",
+                  "    console.log('IPFS URL:', response.ipfsUrl);",
+                  "    console.log('Gateway URL:', response.gatewayUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/info/{{lastIPFSCid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "info", "{{lastIPFSCid}}"]
+            },
+            "description": "Get metadata about an IPFS file without downloading it. Uses the last uploaded CID from collection variable, or replace with any valid CID."
+          }
+        },
+        {
+          "name": "Retrieve File from IPFS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ File retrieved successfully from IPFS');",
+                  "    console.log('Content-Type:', pm.response.headers.get('Content-Type'));",
+                  "    console.log('Content-Length:', pm.response.headers.get('Content-Length'), 'bytes');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/retrieve/{{lastIPFSCid}}?download=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "retrieve", "{{lastIPFSCid}}"],
+              "query": [
+                {
+                  "key": "download",
+                  "value": "true",
+                  "description": "Set to true to force download, false for inline display"
+                }
+              ]
+            },
+            "description": "Retrieve and download a file from IPFS by CID. Uses the last uploaded CID from collection variable. The file will be downloaded to your computer."
+          }
+        },
+        {
+          "name": "Upload File from Path (Authenticated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.cid) {",
+                  "        console.log('✅ File uploaded to IPFS from filesystem');",
+                  "        console.log('CID:', response.data.cid);",
+                  "        pm.collectionVariables.set('lastIPFSCid', response.data.cid);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filePath\": \"C:\\\\Users\\\\EK522WS\\\\OneDrive\\\\Desktop\\\\scope_test_30x30.csv\",\n  \"fileName\": \"custom-name.csv\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ipfs/upload-file",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ipfs", "upload-file"]
+            },
+            "description": "Upload an existing file from the server filesystem to IPFS. Requires authentication.\n\n**Two ways to use this endpoint:**\n\n1. **Complete file path:**\n   ```json\n   {\n     \"filePath\": \"C:\\\\Users\\\\YourName\\\\Desktop\\\\file.csv\"\n   }\n   ```\n   Provide the complete path including the filename.\n\n2. **Directory + fileName:**\n   ```json\n   {\n     \"filePath\": \"C:\\\\Users\\\\YourName\\\\Desktop\",\n     \"fileName\": \"file.csv\"\n   }\n   ```\n   If filePath is a directory, provide fileName to construct the full path.\n\n**Note:** On Windows, use double backslashes (\\\\) in JSON. The fileName parameter is optional if filePath includes the filename."
+          }
+        }
+      ],
+      "description": "IPFS (Pinata) endpoints for uploading files to decentralized storage and retrieving them. Configure PINATA_JWT or PINATA_API_KEY/PINATA_SECRET_KEY in .env file."
+    },
+    {
+      "name": "AI Orchestrator - Emissions Analysis",
+      "item": [
+        {
+          "name": "Orchestrator Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response status is 200', () => {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    pm.test('Status response has success field', () => {",
+                  "        pm.expect(response).to.have.property('success');",
+                  "    });",
+                  "    ",
+                  "    pm.test('Status response has service field', () => {",
+                  "        pm.expect(response).to.have.property('service');",
+                  "    });",
+                  "    ",
+                  "    pm.test('All agents are available', () => {",
+                  "        pm.expect(response).to.have.property('agents');",
+                  "        pm.expect(response.agents).to.be.an('object');",
+                  "    });",
+                  "    ",
+                  "    console.log('✅ Orchestrator Status:', response.status);",
+                  "    console.log('LLM Provider:', response.llm_provider || 'Not configured');",
+                  "    console.log('LLM Configured:', response.llm_configured);",
+                  "    console.log('LLM Model:', response.llm_model || 'Not configured');",
+                  "    console.log('Available Agents:', Object.keys(response.agents).join(', '));",
+                  "    console.log('Message:', response.message);",
+                  "    ",
+                  "    // Set environment variables for testing",
+                  "    if (response.llm_configured) {",
+                  "        console.log('✅ LLM is configured and ready');",
+                  "    } else {",
+                  "        console.warn('⚠️  LLM not configured. Set GEMINI_API_KEY in .env');",
+                  "    }",
+                  "} else {",
+                  "    console.error('❌ Status check failed:', pm.response.code);",
+                  "    ",
+                  "    pm.test('Error response received', () => {",
+                  "        pm.expect(pm.response.code).to.not.equal(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "status"]
+            },
+            "description": "Check if the AI Orchestrator service is operational and all agents are available. Verifies Gemini LLM configuration and agent availability.\n\n**Response includes:**\n- Service status\n- LLM provider (Gemini/OpenAI)\n- LLM configuration status\n- Available agents list\n- Helpful messages"
+          }
+        },
+        {
+          "name": "Analyze Emissions - Comprehensive Report",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set default datacenter if not already set",
+                  "if (!pm.collectionVariables.get('datacenterId')) {",
+                  "    pm.collectionVariables.set('datacenterId', 'India_northEast');",
+                  "    console.log('💡 Set default datacenterId: India_northEast');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Analysis completed successfully!');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('📊 Analysis Summary');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('Datacenter:', response.datacenter);",
+                  "    console.log('Period:', response.period);",
+                  "    console.log('Generated At:', response.generatedAt);",
+                  "    console.log('');",
+                  "    console.log('👥 Vendors:');",
+                  "    console.log('  Total:', response.vendors_summary?.summary?.total_vendors || 0);",
+                  "    console.log('  Total Scope3:', response.vendors_summary?.summary?.total_scope3?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('');",
+                  "    console.log('🌿 Carbon Credits:');",
+                  "    console.log('  Country:', response.carbon_credit_summary?.carbon_credits?.country || 'N/A');",
+                  "    console.log('  Status:', response.carbon_credit_summary?.carbon_credits?.compliance_status || 'N/A');",
+                  "    console.log('  Credit Score:', response.carbon_credit_summary?.carbon_credits?.credit_score || 'N/A');",
+                  "    console.log('');",
+                  "    console.log('👨‍💼 Staff Emissions:');",
+                  "    console.log('  Scope 1:', response.staff_summary?.staff?.scope1?.total_co2e?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('  Scope 2:', response.staff_summary?.staff?.scope2?.total_co2e?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('  Combined:', response.staff_summary?.staff?.summary?.combined_total?.toFixed(2) || 0, 'tCO2e');",
+                  "    console.log('');",
+                  "    ",
+                  "    // Calculate total anomalies",
+                  "    const vendorAnomalies = response.vendors_summary?.vendors?.reduce((sum, v) => sum + (v.anomalies?.length || 0), 0) || 0;",
+                  "    const scope1Anomalies = response.staff_summary?.staff?.scope1?.anomalies?.length || 0;",
+                  "    const scope2Anomalies = response.staff_summary?.staff?.scope2?.anomalies?.length || 0;",
+                  "    const totalAnomalies = vendorAnomalies + scope1Anomalies + scope2Anomalies;",
+                  "    ",
+                  "    console.log('⚠️  Anomalies Detected:', totalAnomalies);",
+                  "    console.log('  Vendor Anomalies:', vendorAnomalies);",
+                  "    console.log('  Scope 1 Anomalies:', scope1Anomalies);",
+                  "    console.log('  Scope 2 Anomalies:', scope2Anomalies);",
+                  "    console.log('');",
+                  "    console.log('📄 Final Report Preview:');",
+                  "    console.log(response.final_report?.substring(0, 300) + '...');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    ",
+                  "    // Save analysis results for reference",
+                  "    pm.collectionVariables.set('lastAnalysisPeriod', response.period);",
+                  "    pm.collectionVariables.set('lastAnalysisDatacenter', response.datacenter);",
+                  "    ",
+                  "    // Save cryptographic proofs if available",
+                  "    if (response.cryptographic_proofs) {",
+                  "        pm.collectionVariables.set('lastReportHash', response.cryptographic_proofs.report_hash);",
+                  "        pm.collectionVariables.set('lastMerkleRoot', response.cryptographic_proofs.evidence_merkle_root);",
+                  "        pm.collectionVariables.set('lastEvidenceHashes', JSON.stringify(response.cryptographic_proofs.evidence_hashes));",
+                  "        console.log('🔒 Cryptographic proofs saved to collection variables');",
+                  "        console.log('   Report Hash:', response.cryptographic_proofs.report_hash.substring(0, 16) + '...');",
+                  "        console.log('   Merkle Root:', response.cryptographic_proofs.evidence_merkle_root.substring(0, 16) + '...');",
+                  "        console.log('   Evidence Items:', response.cryptographic_proofs.evidence_hashes.length);",
+                  "    }",
+                  "    ",
+                  "    // Verify Four-Pillar Architecture",
+                  "    console.log('');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🏗️  FOUR-PILLAR ARCHITECTURE VERIFICATION');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    ",
+                  "    // Pillar 1: AI Multi-Agent System",
+                  "    const pillar1Vendors = response.vendors_summary?.vendors?.length || 0;",
+                  "    const pillar1Carbon = response.carbon_credit_summary?.carbon_credits ? 1 : 0;",
+                  "    const pillar1Staff = (response.staff_summary?.staff?.scope1 ? 1 : 0) + (response.staff_summary?.staff?.scope2 ? 1 : 0);",
+                  "    console.log('✅ PILLAR 1 - AI Agents:');",
+                  "    console.log('   Vendors:', pillar1Vendors, 'analyzed');",
+                  "    console.log('   Carbon Credits:', pillar1Carbon > 0 ? '✅' : '❌');",
+                  "    console.log('   Staff Scopes:', pillar1Staff, '(Scope1 + Scope2)');",
+                  "    ",
+                  "    // Pillar 2: Integrity Layer",
+                  "    const pillar2Hash = response.cryptographic_proofs?.report_hash;",
+                  "    const pillar2Merkle = response.cryptographic_proofs?.evidence_merkle_root;",
+                  "    const pillar2Evidence = response.cryptographic_proofs?.evidence_hashes?.length || 0;",
+                  "    const hashValid = pillar2Hash && /^[a-f0-9]{64}$/i.test(pillar2Hash);",
+                  "    const merkleValid = pillar2Merkle && /^[a-f0-9]{64}$/i.test(pillar2Merkle);",
+                  "    console.log('✅ PILLAR 2 - Integrity Layer:');",
+                  "    console.log('   Report Hash:', hashValid ? '✅ Valid' : '❌ Invalid');",
+                  "    console.log('   Merkle Root:', merkleValid ? '✅ Valid' : '❌ Invalid');",
+                  "    console.log('   Evidence Hashes:', pillar2Evidence);",
+                  "    ",
+                  "    // Pillar 3: Masumi Blockchain",
+                  "    const pillar3Txs = response.masumi_transactions || [];",
+                  "    const pillar3Registrations = pillar3Txs.filter(t => t.type === 'agent_registration').length;",
+                  "    const pillar3Logs = pillar3Txs.filter(t => t.type === 'decision_log').length;",
+                  "    const pillar3Payments = pillar3Txs.filter(t => t.type === 'payment').length;",
+                  "    console.log('✅ PILLAR 3 - Masumi Blockchain:');",
+                  "    console.log('   Total Transactions:', pillar3Txs.length);",
+                  "    console.log('   Registrations:', pillar3Registrations);",
+                  "    console.log('   Decision Logs:', pillar3Logs);",
+                  "    console.log('   Payments:', pillar3Payments);",
+                  "    if (pillar3Txs.length === 0) {",
+                  "        console.log('   ⚠️  Note: Masumi may be disabled (MASUMI_ENABLED=false)');",
+                  "    }",
+                  "    ",
+                  "    // Pillar 4: Master Agent",
+                  "    const pillar4Report = response.final_report;",
+                  "    const pillar4ReportLength = pillar4Report?.length || 0;",
+                  "    const pillar4HasHash = pillar4Report?.includes('hash') || pillar4Report?.includes('Hash');",
+                  "    const pillar4HasMerkle = pillar4Report?.includes('Merkle') || pillar4Report?.includes('merkle');",
+                  "    console.log('✅ PILLAR 4 - Master Agent:');",
+                  "    console.log('   Final Report:', pillar4ReportLength > 100 ? '✅ Generated' : '❌ Missing');",
+                  "    console.log('   Report Length:', pillar4ReportLength, 'characters');",
+                  "    console.log('   Mentions Hash:', pillar4HasHash ? '✅' : '❌');",
+                  "    console.log('   Mentions Merkle:', pillar4HasMerkle ? '✅' : '❌');",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    ",
+                  "    // Automated Tests",
+                  "    pm.test('Pillar 1 - Vendors summary exists', () => {",
+                  "        pm.expect(response.vendors_summary).to.exist;",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 1 - Carbon credits summary exists', () => {",
+                  "        pm.expect(response.carbon_credit_summary).to.exist;",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 1 - Staff summary exists', () => {",
+                  "        pm.expect(response.staff_summary).to.exist;",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 2 - Cryptographic proofs exist', () => {",
+                  "        pm.expect(response.cryptographic_proofs).to.exist;",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 2 - Report hash is valid SHA-256', () => {",
+                  "        const hash = response.cryptographic_proofs?.report_hash;",
+                  "        pm.expect(hash).to.match(/^[a-f0-9]{64}$/i);",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 2 - Merkle root is valid SHA-256', () => {",
+                  "        const root = response.cryptographic_proofs?.evidence_merkle_root;",
+                  "        pm.expect(root).to.match(/^[a-f0-9]{64}$/i);",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 3 - Masumi transactions array exists', () => {",
+                  "        pm.expect(response.masumi_transactions).to.be.an('array');",
+                  "    });",
+                  "    ",
+                  "    pm.test('Pillar 4 - Final report exists and is substantial', () => {",
+                  "        pm.expect(response.final_report).to.be.a('string');",
+                  "        pm.expect(response.final_report.length).to.be.above(100);",
+                  "    });",
+                  "} else {",
+                  "    console.error('❌ Analysis failed:', pm.response.code);",
+                  "    ",
+                  "    // Test for error response",
+                  "    pm.test('Request returned error status', () => {",
+                  "        pm.expect(pm.response.code).to.not.equal(200);",
+                  "    });",
+                  "    ",
+                  "    try {",
+                  "        const error = pm.response.json();",
+                  "        console.error('Error:', error.error || 'Unknown error');",
+                  "        console.error('Message:', error.message || 'No message');",
+                  "    } catch (e) {",
+                  "        console.error('Failed to parse error response');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"{{datacenterId}}\",\n  \"period\": \"Q1 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Generate a comprehensive emissions analysis report using the FOUR-PILLAR ARCHITECTURE:\n\n**PILLAR 1 - AI Multi-Agent System:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions and anomalies\n- Carbon Credits Agent - Looks up thresholds and calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**PILLAR 2 - Integrity Layer:**\n- Automatic data freeze with canonical JSON\n- Report hash (SHA-256) generation\n- Evidence hashes for each item\n- Merkle tree construction\n\n**PILLAR 3 - Masumi Blockchain:**\n- Agent identity registration\n- Decision logging for all actions\n- Micropayment settlement to agents\n- Immutable audit trail\n\n**PILLAR 4 - Master Agent:**\n- Unified report generation\n- Transaction compilation\n- Final settlement\n\n**Period Formats Supported:**\n- \"Q1 2025\"\n- \"2025-Q1\"\n- \"2025-01\" (auto-converted to quarter)\n\n**Returns:** Complete four-pillar output:\n- vendors_summary: Vendor analysis with anomalies\n- carbon_credit_summary: Compliance and credit analysis\n- staff_summary: Scope 1 & 2 emissions analysis\n- cryptographic_proofs: Report hash, evidence hashes, Merkle root\n- masumi_transactions: All blockchain transactions (if enabled)\n- final_report: Human-readable comprehensive summary\n\n**Requires:** Authentication token\n\n**Note:** All proofs and transactions are automatically saved to collection variables. Set MASUMI_ENABLED=true in .env to enable blockchain logging."
+          }
+        },
+        {
+          "name": "Analyze Emissions - Current Quarter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Analysis for current quarter completed!');",
+                  "    const response = pm.response.json();",
+                  "    console.log('Period:', response.period);",
+                  "    console.log('Total Vendors:', response.vendors_summary?.vendors?.length || 0);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"India_northEast\",\n  \"period\": \"2025-Q1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Example analysis request with explicit datacenter name and period in YYYY-QN format. This will analyze emissions for Q1 2025."
+          }
+        },
+        {
+          "name": "Analyze Emissions - Previous Quarter Comparison",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Previous quarter analysis completed!');",
+                  "    console.log('This analysis compares Q4 2024 vs Q3 2024');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"{{datacenterId}}\",\n  \"period\": \"2024-Q4\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Analyze previous quarter (Q4 2024). The system will automatically compare with Q3 2024 for anomaly detection. Change the period to analyze any historical quarter."
+          }
+        },
+        {
+          "name": "Analyze Emissions - Test with Different Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Analysis with alternate period format completed!');",
+                  "    console.log('The system auto-converts \"Q1 2025\" to \"2025-Q1\"');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"datacenterName\": \"{{datacenterId}}\",\n  \"period\": \"Q2 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "analyze"]
+            },
+            "description": "Test the period format conversion. The system accepts \"Q2 2025\" format and converts it to \"2025-Q2\" internally."
+          }
+        }
+      ],
+      "description": "AI-powered orchestration system (using Gemini LLM) that coordinates multiple specialized agents to produce comprehensive emissions analysis reports.\n\n**Agents:**\n- Vendor Agent (Scope 3) - Analyzes vendor emissions, compares quarters, detects anomalies\n- Carbon Credits Agent - Looks up legal thresholds, calculates credit requirements\n- Staff Agent - Analyzes Scope 1 & 2 emissions with sub-agents\n\n**Features:**\n- Parallel agent execution for efficiency\n- AI-powered unified report generation (Gemini)\n- Comprehensive anomaly detection\n- Quarter-over-quarter comparison\n- Statistical analysis for patterns\n- Automatic cryptographic proof generation (data freeze)\n\n**Requirements:**\n- GEMINI_API_KEY set in .env (or OPENAI_API_KEY as fallback)\n- Authentication token\n- Valid datacenter name and period"
+    },
+    {
+      "name": "Data Freeze - Cryptographic Proofs",
+      "item": [
+        {
+          "name": "Freeze Data and Generate Proofs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response status is 200', () => {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response has report_hash', () => {",
+                  "        pm.expect(response.report_hash).to.exist;",
+                  "        pm.expect(response.report_hash).to.match(/^[a-f0-9]{64}$/i);",
+                  "    });",
+                  "    ",
+                  "    pm.test('Response has evidence_merkle_root', () => {",
+                  "        pm.expect(response.evidence_merkle_root).to.exist;",
+                  "        pm.expect(response.evidence_merkle_root).to.match(/^[a-f0-9]{64}$/i);",
+                  "    });",
+                  "    ",
+                  "    pm.test('Response has evidence_hashes array', () => {",
+                  "        pm.expect(response.evidence_hashes).to.be.an('array');",
+                  "        pm.expect(response.evidence_hashes.length).to.be.above(0);",
+                  "    });",
+                  "    ",
+                  "    console.log('✅ Data frozen and cryptographic proofs generated!');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🔒 Cryptographic Proofs');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('Report Hash:', response.report_hash);",
+                  "    console.log('Merkle Root:', response.evidence_merkle_root);",
+                  "    console.log('Evidence Items:', response.evidence_hashes.length);",
+                  "    console.log('');",
+                  "    console.log('Evidence Hashes:');",
+                  "    response.evidence_hashes.forEach((hash, index) => {",
+                  "        console.log(`  ${index + 1}. ${hash.substring(0, 16)}...`);",
+                  "    });",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    ",
+                  "    // Save to collection variables for verification",
+                  "    pm.collectionVariables.set('lastReportHash', response.report_hash);",
+                  "    pm.collectionVariables.set('lastMerkleRoot', response.evidence_merkle_root);",
+                  "    pm.collectionVariables.set('lastEvidenceHashes', JSON.stringify(response.evidence_hashes));",
+                  "    console.log('💾 Cryptographic proofs saved to collection variables');",
+                  "} else {",
+                  "    console.error('❌ Data freeze failed:', pm.response.code);",
+                  "    ",
+                  "    pm.test('Error response structure', () => {",
+                  "        pm.expect(pm.response.code).to.not.equal(200);",
+                  "    });",
+                  "    ",
+                  "    try {",
+                  "        const error = pm.response.json();",
+                  "        console.error('Error:', error.error || 'Unknown error');",
+                  "        console.error('Message:', error.message || 'No message');",
+                  "    } catch (e) {",
+                  "        console.error('Failed to parse error response');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"vendors_summary\": {\n      \"vendors\": [\n        {\n          \"name\": \"Example Vendor\",\n          \"scope3_comparison\": {\n            \"previous_quarter\": {},\n            \"current_quarter\": {\n              \"total_co2e\": 150.5\n            }\n          },\n          \"anomalies\": []\n        }\n      ]\n    },\n    \"carbon_credit_summary\": {\n      \"carbon_credits\": {\n        \"country\": \"India\",\n        \"latest_threshold\": \"50.0 tCO2e/year\",\n        \"current_emission\": \"150.5 tCO2e\",\n        \"credit_score\": \"NON-COMPLIANT\"\n      }\n    },\n    \"staff_summary\": {\n      \"staff\": {\n        \"scope1\": {\n          \"scope1_comparison\": {\n            \"previous_quarter\": {},\n            \"current_quarter\": {\n              \"total_co2e\": 45.2\n            }\n          },\n          \"anomalies\": []\n        },\n        \"scope2\": {\n          \"scope2_comparison\": {\n            \"previous_quarter\": {},\n            \"current_quarter\": {\n              \"total_co2e\": 78.9\n            }\n          },\n          \"anomalies\": []\n        }\n      }\n    },\n    \"final_report\": \"Example report text\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data-freeze/freeze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data-freeze", "freeze"]
+            },
+            "description": "Freeze data and generate cryptographic proofs for blockchain-grade integrity guarantees.\n\n**What it does:**\n1. Freezes data exactly as provided (no modification)\n2. Creates SHA-256 hash of entire report\n3. Generates SHA-256 hashes for each evidence item\n4. Builds Merkle tree from all evidence hashes\n\n**Returns:**\n- report_hash: SHA-256 hash of entire report (64 characters)\n- evidence_hashes: Array of SHA-256 hashes for each evidence item\n- evidence_merkle_root: Final Merkle root hash (64 characters)\n\n**Requires:** Authentication token (any authenticated user)\n\n**Note:** Proofs are automatically saved to collection variables for verification."
+          }
+        },
+        {
+          "name": "Verify Report Hash",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Use last report hash if available",
+                  "const lastHash = pm.collectionVariables.get('lastReportHash');",
+                  "if (lastHash) {",
+                  "    console.log('💡 Using last report hash from collection variables');",
+                  "} else {",
+                  "    console.warn('⚠️  No report hash found in collection variables.');",
+                  "    console.warn('   Make sure to run the orchestrator analysis first, or');",
+                  "    console.warn('   manually set the expectedHash in the request body.');",
+                  "}",
+                  "",
+                  "// Helper: Extract data and hash from orchestrator response",
+                  "// If you have the full orchestrator response, you can use this:",
+                  "// 1. Remove cryptographic_proofs",
+                  "// 2. Use the remaining data as 'data' field",
+                  "// 3. Extract cryptographic_proofs.report_hash as 'expectedHash'"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response status is 200', () => {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response has verified field', () => {",
+                  "        pm.expect(response).to.have.property('verified');",
+                  "        pm.expect(response.verified).to.be.a('boolean');",
+                  "    });",
+                  "    ",
+                  "    pm.test('Hash verification result', () => {",
+                  "        if (response.verified) {",
+                  "            console.log('✅ Hash verification passed');",
+                  "        } else {",
+                  "            console.warn('⚠️  Hash verification failed - data may have been tampered');",
+                  "        }",
+                  "        // Test still passes even if verification fails (it's testing the API response, not the data)",
+                  "        pm.expect(response).to.have.property('verified');",
+                  "    });",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🔍 Report Hash Verification');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    if (response.verified) {",
+                  "        console.log('✅ VERIFIED: Report hash matches - data integrity confirmed');",
+                  "        console.log('   The report has not been tampered with.');",
+                  "    } else {",
+                  "        console.error('❌ FAILED: Report hash does not match');",
+                  "        console.error('   The report may have been modified or tampered with.');",
+                  "        ",
+                  "        // Show debug info if available",
+                  "        if (response.debug) {",
+                  "            console.log('');",
+                  "            console.log('🔍 Debug Information:');",
+                  "            console.log('   Computed Hash:', response.debug.computedHash);",
+                  "            console.log('   Expected Hash:', response.debug.expectedHash);",
+                  "            console.log('   Hashes Match:', response.debug.hashesMatch);",
+                  "            if (response.debug.note) {",
+                  "                console.log('   Note:', response.debug.note);",
+                  "            }",
+                  "            console.log('');",
+                  "            console.log('💡 Tip: Make sure the data you are verifying matches');",
+                  "            console.log('   exactly the data that was frozen. Use the actual');",
+                  "            console.log('   orchestrator analysis result, not example data.');",
+                  "        }",
+                  "    }",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "} else {",
+                  "    console.error('❌ Verification request failed:', pm.response.code);",
+                  "    ",
+                  "    pm.test('Error response received', () => {",
+                  "        pm.expect(pm.response.code).to.not.equal(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"success\": true,\n    \"datacenter\": \"india-northeast\",\n    \"period\": \"2025-Q1\",\n    \"vendors_summary\": {\n      \"vendors\": [\n        {\n          \"name\": \"samsung\",\n          \"email\": \"ujjwal+samsung@gmail.com\",\n          \"scope3_comparison\": {\n            \"previous_quarter\": \"No data available\",\n            \"current_quarter\": \"0.00 tCO2e\"\n          },\n          \"anomalies\": [\n            {\n              \"type\": \"NO_BASELINE\",\n              \"reason\": \"No historical data available for comparison. Baseline should be established for future analysis.\"\n            }\n          ],\n          \"status\": \"submitted\",\n          \"attested\": false\n        }\n      ],\n      \"summary\": {\n        \"total_vendors\": 1,\n        \"total_anomalies\": 1,\n        \"total_scope3\": 0\n      }\n    },\n    \"carbon_credit_summary\": {\n      \"carbon_credits\": {\n        \"country\": \"manipur\",\n        \"latest_threshold\": \"50 tCO2e/year\",\n        \"threshold_source\": \"Fallback estimate\",\n        \"current_emission\": \"0.00 tCO2e\",\n        \"annual_projection\": \"0.00 tCO2e/year\",\n        \"credit_score\": \"COMPLIANT\",\n        \"credit_requirement\": \"0 credits needed\",\n        \"compliance_status\": \"COMPLIANT\",\n        \"analysis\": \"Annual emissions projection (0.00 tCO2e) is below the threshold (50 tCO2e/year). No carbon credits required.\"\n      }\n    },\n    \"staff_summary\": {\n      \"staff\": {\n        \"scope1\": {\n          \"total_co2e\": 0,\n          \"comparison\": {\n            \"previous_quarter\": \"No data available\",\n            \"current_quarter\": \"0.00 tCO2e\",\n            \"change\": \"N/A\"\n          },\n          \"anomalies\": [\n            {\n              \"type\": \"NO_BASELINE\",\n              \"reason\": \"No historical data available for comparison. Baseline should be established for future analysis.\"\n            }\n          ],\n          \"data_breakdown\": {\n            \"diesel_liters\": 0,\n            \"diesel_co2_tons\": 0,\n            \"refrigerant_kg\": 0,\n            \"refrigerant_co2_tons\": 0,\n            \"other_sources\": {}\n          }\n        },\n        \"scope2\": {\n          \"total_co2e\": 0,\n          \"comparison\": {\n            \"previous_quarter\": \"No data available\",\n            \"current_quarter\": \"0.00 tCO2e\",\n            \"change\": \"N/A\"\n          },\n          \"anomalies\": [\n            {\n              \"type\": \"NO_BASELINE\",\n              \"reason\": \"No historical data available for comparison. Baseline should be established for future analysis.\"\n            }\n          ],\n          \"data_breakdown\": {\n            \"electricity_kwh\": 0,\n            \"electricity_co2_tons\": 0,\n            \"grid_factor\": \"Not specified\",\n            \"other_sources\": {}\n          }\n        },\n        \"summary\": {\n          \"total_scope1_co2e\": 0,\n          \"total_scope2_co2e\": 0,\n          \"total_scope1_anomalies\": 1,\n          \"total_scope2_anomalies\": 1,\n          \"combined_total\": 0\n        }\n      }\n    },\n    \"final_report\": \"# Emissions Analysis Report\\n**Datacenter:** india-northeast\\n**Period:** 2025-Q1\\n**Generated:** 29/11/2025, 11:53:09 pm\\n\\n## Executive Summary\\nThis report analyzes emissions data for india-northeast during 2025-Q1. The analysis covers vendor Scope 3 emissions, staff Scope 1 and Scope 2 emissions, and carbon credit positioning.\\n\\n## Vendor Insights\\n- **Total Vendors Analyzed:** 1\\n- **Total Anomalies Detected:** 1\\n- **Total Scope 3 Emissions:** 0.00 tCO2e\\n\\n\\n### samsung\\n- Current Quarter: 0.00 tCO2e\\n- Previous Quarter: No data available\\n- Anomalies: 1\\n  - NO_BASELINE: No historical data available for comparison. Baseline should be established for future analysis.\\n\\n\\n## Staff Emissions Evaluation\\n- **Scope 1 Emissions:** N/A tCO2e\\n- **Scope 2 Emissions:** N/A tCO2e\\n- **Scope 1 Anomalies:** 0\\n- **Scope 2 Anomalies:** 0\\n\\n## Carbon Credit Positioning\\n- **Country:** manipur\\n- **Current Emissions:** 0.00 tCO2e\\n- **Legal Threshold:** 50 tCO2e/year\\n- **Credit Score:** COMPLIANT\\n\\n## Risks & Recommendations\\nBased on the analysis:\\n1. Monitor vendors with detected anomalies closely\\n2. Review staff emissions patterns for unusual increases\\n3. Ensure compliance with carbon credit thresholds\\n4. Consider implementing corrective actions for identified anomalies\\n\\n---\\n*Report generated automatically. For detailed analysis, review individual agent outputs.*\",\n    \"generatedAt\": \"2025-11-29T18:23:09.499Z\"\n  },\n  \"expectedHash\": \"{{lastReportHash}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data-freeze/verify-report",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data-freeze", "verify-report"]
+            },
+            "description": "Verify that report data matches the expected hash to detect tampering.\n\n**What it checks:**\n- Computes SHA-256 hash of the provided data\n- Compares it with the expected hash\n- Returns verification status\n\n**Request Body Format:**\n```json\n{\n  \"data\": {\n    \"success\": true,\n    \"datacenter\": \"india-northeast\",\n    \"period\": \"2025-Q1\",\n    \"vendors_summary\": { ... },\n    \"carbon_credit_summary\": { ... },\n    \"staff_summary\": { ... },\n    \"final_report\": \"...\",\n    \"generatedAt\": \"...\"\n  },\n  \"expectedHash\": \"ec313542fb36bee93c239d378d2c74b6c8cc06471c0058e8cc83ebaa539c0322\"\n}\n```\n\n**IMPORTANT - How to verify orchestrator result:**\n1. Take your orchestrator response\n2. Remove the `cryptographic_proofs` field entirely\n3. Wrap the remaining object in a `data` field\n4. Extract `cryptographic_proofs.report_hash` as `expectedHash`\n\n**Example:**\nIf orchestrator returns:\n```json\n{\n  \"success\": true,\n  \"datacenter\": \"...\",\n  \"vendors_summary\": { ... },\n  \"cryptographic_proofs\": { \"report_hash\": \"abc123...\" }\n}\n```\n\nFor verification, send:\n```json\n{\n  \"data\": {\n    \"success\": true,\n    \"datacenter\": \"...\",\n    \"vendors_summary\": { ... }\n  },\n  \"expectedHash\": \"abc123...\"\n}\n```\n\n**Response:**\n- verified: true if hash matches, false otherwise\n- message: Verification result message\n- debug: Debug information showing computed vs expected hash\n\n**Requires:** Authentication"
+          }
+        },
+        {
+          "name": "Verify Evidence Merkle Root",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Use last Merkle root if available",
+                  "const lastRoot = pm.collectionVariables.get('lastMerkleRoot');",
+                  "if (lastRoot) {",
+                  "    console.log('💡 Using last Merkle root from collection variables');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Response status is 200', () => {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    ",
+                  "    pm.test('Response has verified field', () => {",
+                  "        pm.expect(response).to.have.property('verified');",
+                  "        pm.expect(response.verified).to.be.a('boolean');",
+                  "    });",
+                  "    ",
+                  "    pm.test('Merkle root verification result', () => {",
+                  "        if (response.verified) {",
+                  "            console.log('✅ Merkle root verification passed');",
+                  "        } else {",
+                  "            console.warn('⚠️  Merkle root verification failed - evidence may have been tampered');",
+                  "        }",
+                  "        pm.expect(response).to.have.property('verified');",
+                  "    });",
+                  "    ",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    console.log('🔍 Evidence Merkle Root Verification');",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "    if (response.verified) {",
+                  "        console.log('✅ VERIFIED: Merkle root matches - all evidence items intact');",
+                  "        console.log('   No evidence items have been inserted, deleted, or modified.');",
+                  "    } else {",
+                  "        console.error('❌ FAILED: Merkle root does not match');",
+                  "        console.error('   Evidence items may have been tampered with.');",
+                  "    }",
+                  "    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');",
+                  "} else {",
+                  "    console.error('❌ Verification request failed:', pm.response.code);",
+                  "    ",
+                  "    pm.test('Error response received', () => {",
+                  "        pm.expect(pm.response.code).to.not.equal(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evidenceItems\": [\n    {\n      \"type\": \"vendor_scope3\",\n      \"vendor_name\": \"Example Vendor\",\n      \"scope3_comparison\": {},\n      \"anomalies\": []\n    },\n    {\n      \"type\": \"carbon_credits\",\n      \"data\": {}\n    }\n  ],\n  \"expectedMerkleRoot\": \"{{lastMerkleRoot}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data-freeze/verify-evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data-freeze", "verify-evidence"]
+            },
+            "description": "Verify that evidence items match the expected Merkle root to detect tampering.\n\n**What it checks:**\n- Generates hashes for all provided evidence items\n- Builds Merkle tree from the hashes\n- Compares root with expected Merkle root\n- Returns verification status\n\n**Request Body:**\n- evidenceItems: Array of evidence items to verify\n- expectedMerkleRoot: The expected Merkle root hash (64 characters)\n\n**Response:**\n- verified: true if Merkle root matches, false otherwise\n- message: Verification result message\n\n**Requires:** Authentication\n\n**Tip:** Use the last Merkle root from collection variables or provide your own.\n\n**Note:** Evidence items must match exactly (same order, same data) as when frozen."
+          }
+        }
+      ],
+      "description": "Data Freeze Service - Generate and verify cryptographic proofs for blockchain-grade integrity guarantees.\n\n**Features:**\n- Freeze data exactly as provided (no modification)\n- SHA-256 report hashing for integrity verification\n- Individual evidence item hashing\n- Merkle tree generation for evidence verification\n- Tamper detection and integrity verification\n\n**Use Cases:**\n- Freeze orchestrator analysis results\n- Verify report integrity before use\n- Verify evidence integrity for compliance\n- Blockchain-grade data security\n\n**Requirements:**\n- Authentication token (any authenticated user can freeze data)\n- Valid data structure matching orchestrator output format"
+    },
+    {
+      "name": "Database Test",
+      "item": [
+        {
+          "name": "Test DB Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/test/db",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "test", "db"]
+            },
+            "description": "Test MongoDB connection. May need to create this route first."
+          }
+        }
+      ]
+    }
+  ]
+}
+
