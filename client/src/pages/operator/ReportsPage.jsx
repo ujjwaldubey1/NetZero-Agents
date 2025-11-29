@@ -39,7 +39,13 @@ const ReportsPage = () => {
   };
 
   return (
-    <MemeLayout title="COMPLIANCE REPORTS" subtitle="Freeze, narrate, and certify per period.">
+    <MemeLayout
+      title="COMPLIANCE REPORTS"
+      subtitle="Freeze, narrate, and certify per period."
+      bgPattern="conic-gradient(from 0deg at 50% 50%, #f0f0f0 0deg, #ffffff 60deg, #f0f0f0 120deg, #ffffff 180deg, #f0f0f0 240deg, #ffffff 300deg)"
+      bgSize="60px 60px"
+      sx={{ animation: 'spinSlow 60s linear infinite' }}
+    >
       <Card sx={{ p: 3, mb: 2, bgcolor: '#ffffff', borderColor: '#0a0a0a', boxShadow: '8px 8px 0px #0a0a0a', position: 'relative', overflow: 'visible' }}>
         <Box 
           component="img" 

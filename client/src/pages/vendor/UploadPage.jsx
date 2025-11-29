@@ -35,7 +35,13 @@ const VendorUploadPage = () => {
   useEffect(() => { loadRecent(); loadDataCenters(); }, []);
 
   return (
-    <MemeLayout title="UPLOAD INTEL" subtitle="Submit your Scope 3 data.">
+    <MemeLayout
+      title="UPLOAD INTEL"
+      subtitle="Submit your Scope 3 data."
+      bgPattern="repeating-linear-gradient(-45deg, #f5f5f5, #f5f5f5 5px, #ffffff 5px, #ffffff 25px)"
+      bgSize="20px 20px"
+      sx={{ animation: 'moveVertical 10s linear infinite' }}
+    >
       <Card className="glass-card" sx={{ p: 3, bgcolor: '#ffffff', borderColor: '#00f0ff', boxShadow: '8px 8px 0px #00f0ff', position: 'relative', overflow: 'visible' }}>
         <Box 
           component="img" 

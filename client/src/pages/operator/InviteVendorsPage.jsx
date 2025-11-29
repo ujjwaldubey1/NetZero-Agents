@@ -47,7 +47,13 @@ const InviteVendorsPage = () => {
   };
 
   return (
-    <MemeLayout title="VENDOR RECRUITMENT" subtitle="Expand your alliance.">
+    <MemeLayout
+      title="VENDOR RECRUITMENT"
+      subtitle="Expand your alliance."
+      bgPattern="repeating-radial-gradient(circle at 0 0, transparent 0, #f5f5f5 10px, transparent 20px)"
+      bgSize="40px 40px"
+      sx={{ animation: 'moveVertical 15s linear infinite' }}
+    >
       <Stack direction="row" spacing={2} mt={4}>
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Button 

@@ -73,7 +73,21 @@ const DataCentersPage = () => {
   const vendorLookup = useMemo(() => Object.fromEntries(vendors.map((v) => [v._id, v.vendorName || v.email])), [vendors]);
 
   return (
-    <MemeLayout title="DATA CENTERS" subtitle="Manage your operational bases.">
+    <MemeLayout
+      title="DATA CENTERS"
+      subtitle="Manage your operational bases."
+      bgPattern={`
+        linear-gradient(30deg, #e0e0e0 12%, transparent 12.5%, transparent 87%, #e0e0e0 87.5%, #e0e0e0),
+        linear-gradient(150deg, #e0e0e0 12%, transparent 12.5%, transparent 87%, #e0e0e0 87.5%, #e0e0e0),
+        linear-gradient(30deg, #e0e0e0 12%, transparent 12.5%, transparent 87%, #e0e0e0 87.5%, #e0e0e0),
+        linear-gradient(150deg, #e0e0e0 12%, transparent 12.5%, transparent 87%, #e0e0e0 87.5%, #e0e0e0),
+        linear-gradient(60deg, #e0e0e077 25%, transparent 25.5%, transparent 75%, #e0e0e077 75%, #e0e0e077),
+        linear-gradient(60deg, #e0e0e077 25%, transparent 25.5%, transparent 75%, #e0e0e077 75%, #e0e0e077)
+      `}
+      bgSize="40px 70px"
+      bgPosition="0 0, 0 0, 20px 35px, 20px 35px, 0 0, 20px 35px"
+      sx={{ animation: 'moveDiagonal 30s linear infinite' }}
+    >
       <Stack direction="row" spacing={2} mt={4}>
         <Button 
           variant="contained" 

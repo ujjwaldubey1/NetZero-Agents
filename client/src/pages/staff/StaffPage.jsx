@@ -73,7 +73,13 @@ const StaffPage = () => {
     : staff.filter((member) => isStaffInDc(member._id, staffFilterDc));
 
   return (
-    <MemeLayout title="STAFF CONSOLE" subtitle="Manage your team and their access levels.">
+    <MemeLayout
+      title="STAFF CONSOLE"
+      subtitle="Manage your team and their access levels."
+      bgPattern="conic-gradient(#f0f0f0 0.25turn, #ffffff 0.25turn 0.5turn, #f0f0f0 0.5turn 0.75turn, #ffffff 0.75turn)"
+      bgSize="40px 40px"
+      sx={{ animation: 'spinSlow 120s linear infinite' }}
+    >
       {message && <Alert sx={{ mt: 2, bgcolor: '#00f0ff', color: '#000', border: '2px solid #000' }}>{message}</Alert>}
       {error && <Alert severity="error" sx={{ mt: 2, bgcolor: '#ff0055', color: '#fff', border: '2px solid #0a0a0a' }}>{error}</Alert>}
 

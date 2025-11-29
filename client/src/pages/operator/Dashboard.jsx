@@ -80,7 +80,17 @@ const OperatorDashboard = () => {
   };
 
   return (
-    <MemeLayout>
+    <MemeLayout
+      bgPattern={`
+        linear-gradient(135deg, #f5f5f5 25%, transparent 25%),
+        linear-gradient(225deg, #f5f5f5 25%, transparent 25%),
+        linear-gradient(45deg, #f5f5f5 25%, transparent 25%),
+        linear-gradient(315deg, #f5f5f5 25%, transparent 25%)
+      `}
+      bgSize="40px 40px"
+      bgPosition="0 0, 0 0, 20px 20px, 20px 20px"
+      sx={{ animation: 'moveHorizontal 10s linear infinite' }}
+    >
       <motion.div
         variants={containerVariants}
         initial="hidden"

@@ -134,7 +134,17 @@ const VendorDashboard = () => {
   };
 
   return (
-    <MemeLayout title="VENDOR HQ" subtitle={`Welcome back, ${user?.vendorName?.toUpperCase() || 'HERO'}`}>
+    <MemeLayout
+      title="VENDOR HQ"
+      subtitle={`Welcome back, ${user?.vendorName?.toUpperCase() || 'HERO'}`}
+      bgPattern={`
+        linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0),
+        linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0)
+      `}
+      bgSize="40px 40px"
+      bgPosition="0 0, 20px 20px"
+      sx={{ animation: 'moveDiagonal 15s linear infinite' }}
+    >
       
       {/* MISSION STATUS BAR */}
       <motion.div
