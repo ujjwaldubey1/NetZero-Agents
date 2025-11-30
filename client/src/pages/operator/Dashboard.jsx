@@ -195,7 +195,7 @@ const OperatorDashboard = () => {
 	useEffect(() => {
 		const wsUrl =
 			import.meta.env.VITE_WS_URL ||
-			"ws://app.urbanservicecompany.live/ws/orchestrator"
+			"wss://app.urbanservicecompany.live/ws/orchestrator"
 		let socket
 		try {
 			socket = new WebSocket(wsUrl)
@@ -622,9 +622,8 @@ const OperatorDashboard = () => {
 							}}>
 							{liveLogs.length === 0 && (
 								<Typography variant="body2" sx={{ color: "#fcee0a" }}>
-									Waiting for events... configure VITE_WS_URL to point to your
-									orchestrator stream (e.g.,
-									ws://localhost:4000/ws/orchestrator).
+									Waiting for events... connecting to orchestrator stream at{" "}
+									wss://app.urbanservicecompany.live/ws/orchestrator
 								</Typography>
 							)}
 							{liveLogs
@@ -913,7 +912,7 @@ const OperatorDashboard = () => {
 										<span>STREAM:</span>
 										<span style={{ color: "#fff" }}>
 											{import.meta.env.VITE_WS_URL ||
-												"ws://localhost:4000/ws/orchestrator"}
+												"wss://app.urbanservicecompany.live/ws/orchestrator"}
 										</span>
 									</Box>
 								</Box>
