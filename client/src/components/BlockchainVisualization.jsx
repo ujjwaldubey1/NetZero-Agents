@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Box, Typography, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip, Grid, Card, CardContent } from '@mui/material';
+import { Box, Typography, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip, Grid, Card, CardContent, Button } from '@mui/material';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Lock, CloudUpload, Shield, Verified, ExpandMore, ExpandLess, ContentCopy, OpenInNew, AccountBalanceWallet, Token } from '@mui/icons-material';
 import { colors } from '../utils/color';
@@ -490,16 +490,35 @@ const LedgerTable = ({ events }) => {
   );
 };
 
-const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onToggle }) => {
-  const eventCount = events.length;
+const DatacenterBlock = ({ datacenter, allEvents, isExpanded, isOtherExpanded, onToggle }) => {
+  const INITIAL_BLOCK_COUNT = 20;
+  const [visibleBlockCount, setVisibleBlockCount] = useState(INITIAL_BLOCK_COUNT);
+  
+  // Sort and slice events to show only visible ones
+  const sortedEvents = useMemo(() => {
+    return [...allEvents].sort((a, b) => {
+      const timeA = new Date(a.timestamp || a.createdAt || 0).getTime();
+      const timeB = new Date(b.timestamp || b.createdAt || 0).getTime();
+      return timeB - timeA; // Most recent first
+    });
+  }, [allEvents]);
+  
+  const events = sortedEvents.slice(0, visibleBlockCount);
+  const hasMoreBlocks = sortedEvents.length > visibleBlockCount;
+  const totalEventCount = sortedEvents.length;
+  
   const [mousePosition, setMousePosition] = useState(null);
   const [positions, setPositions] = useState({});
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = React.useRef(null);
+  
+  const handleLoadMore = () => {
+    setVisibleBlockCount(prev => prev + 20);
+  };
 
   const totalEmissions = useMemo(() => {
-    return events.reduce((sum, event) => sum + extractEmissions(event.detail), 0);
-  }, [events]);
+    return sortedEvents.reduce((sum, event) => sum + extractEmissions(event.detail), 0);
+  }, [sortedEvents]);
 
   // Assign colors ensuring no two linked blocks have the same color
   const eventColors = useMemo(() => {
@@ -568,7 +587,7 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
               </Typography>
               <Stack direction="row" spacing={2} mt={0.5}>
                 <Typography variant="body2" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 600, opacity: 0.7 }}>
-                  {eventCount} blockchain event{eventCount !== 1 ? 's' : ''}
+                  {totalEventCount} blockchain event{totalEventCount !== 1 ? 's' : ''} ({events.length} shown)
                 </Typography>
                 {totalEmissions > 0 && (
                   <Chip 
@@ -610,7 +629,7 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
               }}
             >
               {/* Parallax Background */}
-              <ParallaxBackground containerRef={containerRef} eventCount={eventCount} />
+              <ParallaxBackground containerRef={containerRef} eventCount={events.length} />
 
               {/* Wallet Panel */}
               <Box sx={{ position: 'relative', zIndex: 2, mb: 4 }}>
@@ -740,13 +759,37 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                 ))}
               </Box>
               
-              {/* Detailed Ledger Table */}
-              <Box sx={{ position: 'relative', zIndex: 1, mt: 4 }}>
-                <Typography variant="h6" sx={{ fontFamily: '"Bangers", sans-serif', color: '#fff', mb: 2, letterSpacing: 1 }}>
-                  📋 LEDGER DETAILS
-                </Typography>
-                <LedgerTable events={events} />
-              </Box>
+              {/* Show More Button */}
+              {hasMoreBlocks && (
+                <Box sx={{ position: 'relative', zIndex: 1, mt: 4, textAlign: 'center' }}>
+                  <Button
+                    onClick={handleLoadMore}
+                    variant="contained"
+                    sx={{
+                      bgcolor: '#00f0ff',
+                      color: '#0a0a0a',
+                      border: '3px solid #0a0a0a',
+                      boxShadow: '8px 8px 0px #0a0a0a',
+                      borderRadius: 0,
+                      px: 4,
+                      py: 1.5,
+                      fontFamily: '"Bangers", sans-serif',
+                      fontSize: '1.2rem',
+                      letterSpacing: 1,
+                      textTransform: 'uppercase',
+                      '&:hover': {
+                        bgcolor: '#ff0055',
+                        color: '#fff',
+                        boxShadow: '10px 10px 0px #0a0a0a',
+                        transform: 'translateY(-2px)',
+                      },
+                      transition: 'all 0.3s',
+                    }}
+                  >
+                    Show More ({sortedEvents.length - visibleBlockCount} remaining)
+                  </Button>
+                </Box>
+              )}
 
             </Box>
           </motion.div>
@@ -759,7 +802,7 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
 const BlockchainVisualization = ({ events, datacenters = [] }) => {
   const [expandedDatacenter, setExpandedDatacenter] = useState(null);
 
-  // Group events by datacenter
+  // Group events by datacenter (don't limit here - let DatacenterBlock handle it)
   const datacenterGroups = useMemo(() => {
     const groups = {};
     
@@ -788,6 +831,15 @@ const BlockchainVisualization = ({ events, datacenters = [] }) => {
       });
     }
     
+    // Sort events by timestamp (most recent first) but don't limit here
+    Object.keys(groups).forEach(dcName => {
+      groups[dcName] = groups[dcName].sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.createdAt || 0).getTime();
+        const timeB = new Date(b.timestamp || b.createdAt || 0).getTime();
+        return timeB - timeA; // Most recent first
+      });
+    });
+    
     return groups;
   }, [events, datacenters]);
 
@@ -810,7 +862,7 @@ const BlockchainVisualization = ({ events, datacenters = [] }) => {
         <DatacenterBlock
           key={datacenter}
           datacenter={datacenter}
-          events={dcEvents}
+          allEvents={dcEvents}
           isExpanded={expandedDatacenter === datacenter}
           isOtherExpanded={expandedDatacenter !== null}
           onToggle={() => toggleDatacenter(datacenter)}
