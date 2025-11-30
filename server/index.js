@@ -55,39 +55,8 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configure CORS to allow all origins with proper preflight handling
-// This ensures the Vercel frontend can access the backend API
-app.use(cors({
-  origin: true, // Allow all origins - set to specific origins in production if needed
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-  ],
-  exposedHeaders: ['Content-Length', 'Content-Type'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-  maxAge: 86400 // Cache preflight requests for 24 hours
-}));
-
-// Explicitly handle OPTIONS preflight requests BEFORE routes
-// This ensures preflight requests are handled correctly
-app.options('*', (req, res) => {
-  const origin = req.headers.origin;
-  res.header('Access-Control-Allow-Origin', origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400');
-  res.sendStatus(204);
-});
-
+// Configure CORS to allow all origins
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(uploadDir));
 
