@@ -23,6 +23,11 @@ const AnimatedCounter = ({ value }) => {
 const OperatorDashboard = () => {
   const [report, setReport] = useState(null);
   const [trend, setTrend] = useState([]);
+  const mockTotals = useMemo(() => ({
+    scope1: { diesel_co2_tons: 360 },
+    scope2: { electricity_co2_tons: 520 },
+    scope3: { upstream_co2_tons: 780 },
+  }), []);
   const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState(() => {
     const now = new Date();
@@ -38,6 +43,15 @@ const OperatorDashboard = () => {
   const [orchStatus, setOrchStatus] = useState(null);
   const [liveLogs, setLiveLogs] = useState([]);
   const [wsState, setWsState] = useState('idle');
+  const mockTrend = useMemo(
+    () => ([
+      { period: '2025-Q1', scope1: 320, scope2: 450, scope3: 680 },
+      { period: '2025-Q2', scope1: 340, scope2: 470, scope3: 700 },
+      { period: '2025-Q3', scope1: 360, scope2: 490, scope3: 730 },
+      { period: '2025-Q4', scope1: 380, scope2: 510, scope3: 760 },
+    ]),
+    []
+  );
 
   const addLog = (entry) => {
     setLiveLogs((prev) => [
@@ -71,7 +85,7 @@ const OperatorDashboard = () => {
         setSelectedPeriod(periodToUse);
       }
 
-      // Trend chart sorted ascending for readability
+      // Trend chart sorted ascending for readability; if no data, leave empty and fallback to mock
       setTrend(periodsDesc.slice().reverse());
 
       // Prefer backend report for the chosen period; fall back to emissions aggregate
@@ -451,7 +465,7 @@ const OperatorDashboard = () => {
         {error && <Alert severity="error" sx={{ mt: 2, border: '3px solid #0a0a0a', boxShadow: '5px 5px 0px #0a0a0a' }}>{error}</Alert>}
 
         <motion.div variants={itemVariants}>
-          {report && <DashboardCards totals={report.scopeTotals || {}} />}
+          <DashboardCards totals={(report && report.scopeTotals) || mockTotals} />
         </motion.div>
 
         <Grid container spacing={4} sx={{ mt: 2 }}>
@@ -488,7 +502,7 @@ const OperatorDashboard = () => {
                   EMISSIONS TREND
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={trend}>
+                  <LineChart data={trend.length ? trend : mockTrend}>
                     <CartesianGrid stroke="#e0e0e0" strokeDasharray="5 5" />
                     <XAxis dataKey="period" stroke="#0a0a0a" tick={{ fontFamily: 'Space Grotesk' }} />
                     <YAxis stroke="#0a0a0a" tick={{ fontFamily: 'Space Grotesk' }} />
