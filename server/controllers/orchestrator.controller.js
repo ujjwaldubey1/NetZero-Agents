@@ -36,6 +36,40 @@ export const analyzeEmissions = async (req, res) => {
     // Trigger orchestrator (now includes Pillar 2 and 3 integration)
     const result = await orchestrateAnalysis(datacenterName, period);
 
+    // Store full orchestrator result for compliance log viewing
+    try {
+      const OrchestratorResult = (await import('../models/OrchestratorResult.js')).default;
+      await OrchestratorResult.findOneAndUpdate(
+        {
+          datacenter: result.datacenter || datacenterName,
+          period: result.period,
+        },
+        {
+          datacenter: result.datacenter || datacenterName,
+          period: result.period,
+          jobId: result.jobId || `job_${Date.now()}_${datacenterName}_${result.period}`.replace(/\s+/g, '_'),
+          vendors_summary: result.vendors_summary,
+          carbon_credit_summary: result.carbon_credit_summary,
+          staff_summary: result.staff_summary,
+          anomalies: result.anomalies || [],
+          cryptographic_proofs: result.cryptographic_proofs,
+          ipfs_links: result.ipfs_links,
+          masumi_transactions: result.masumi_transactions || [],
+          final_report: result.final_report,
+          ui_payload: result.ui_payload,
+          generatedAt: result.generatedAt ? new Date(result.generatedAt) : new Date(),
+        },
+        {
+          upsert: true,
+          new: true,
+        }
+      );
+      console.log('💾 [Orchestrator] Full result stored for compliance log viewing');
+    } catch (storageError) {
+      console.warn('⚠️  Failed to store full orchestrator result:', storageError.message);
+      // Continue even if storage fails - audit log still works
+    }
+
     // Log audit event
     await AuditLog.logInfo({
       event: 'ORCHESTRATOR_ANALYSIS_COMPLETED',

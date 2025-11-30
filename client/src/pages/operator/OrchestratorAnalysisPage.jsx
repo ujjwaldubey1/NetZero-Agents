@@ -17,8 +17,8 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { PlayArrow, Download, Verified, Security, CloudUpload } from '@mui/icons-material';
-import { analyzeEmissions, getOrchestratorStatus, fetchDataCenters } from '../../api';
+import { PlayArrow, Download, Verified, Security, CloudUpload, WorkspacePremium } from '@mui/icons-material';
+import { analyzeEmissions, getOrchestratorStatus, fetchDataCenters, mintCertificateFromAnalysis } from '../../api';
 import BootLoader from '../../components/BootLoader';
 import DashboardCards from '../../components/DashboardCards';
 import LedgerTimeline from '../../components/LedgerTimeline';
@@ -33,6 +33,9 @@ const OrchestratorAnalysisPage = () => {
   const [datacenters, setDatacenters] = useState([]);
   const [selectedDatacenter, setSelectedDatacenter] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [certificate, setCertificate] = useState(null);
+  const [mintingCertificate, setMintingCertificate] = useState(false);
+  const [certificateError, setCertificateError] = useState(null);
 
   // Load orchestrator status and datacenters
   useEffect(() => {
@@ -80,6 +83,28 @@ const OrchestratorAnalysisPage = () => {
     try {
       const response = await analyzeEmissions(selectedDatacenter, selectedPeriod);
       setResult(response.data);
+      
+      // Save to localStorage for certificate page
+      if (response.data && response.data.cryptographic_proofs) {
+        const storedResults = JSON.parse(localStorage.getItem('orchestratorResults') || '[]');
+        const newResult = {
+          ...response.data,
+          savedAt: new Date().toISOString(),
+        };
+        
+        // Check if this result already exists
+        const exists = storedResults.find(
+          r => r.datacenter === response.data.datacenter && r.period === response.data.period
+        );
+        
+        if (!exists) {
+          storedResults.unshift(newResult); // Add to beginning
+          // Keep only last 20 results
+          const limited = storedResults.slice(0, 20);
+          localStorage.setItem('orchestratorResults', JSON.stringify(limited));
+          console.log('💾 Saved orchestrator result to localStorage for certificate minting');
+        }
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Analysis failed');
       console.error('Analysis error:', err);
@@ -135,6 +160,28 @@ const OrchestratorAnalysisPage = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleMintCertificate = async () => {
+    if (!result || !result.cryptographic_proofs) {
+      setCertificateError('No analysis result available to mint certificate');
+      return;
+    }
+
+    setMintingCertificate(true);
+    setCertificateError(null);
+    setCertificate(null);
+
+    try {
+      const response = await mintCertificateFromAnalysis(result);
+      setCertificate(response.data);
+      console.log('✅ Certificate minted:', response.data);
+    } catch (err) {
+      setCertificateError(err.response?.data?.message || err.message || 'Certificate minting failed');
+      console.error('Certificate minting error:', err);
+    } finally {
+      setMintingCertificate(false);
+    }
   };
 
   return (
@@ -502,6 +549,122 @@ const OrchestratorAnalysisPage = () => {
                       </Typography>
                     </Box>
                   ))}
+                </Box>
+              )}
+            </Paper>
+          )}
+
+          {/* Certificate Minting */}
+          {result && result.cryptographic_proofs && (
+            <Paper
+              sx={{
+                p: 3,
+                mb: 4,
+                border: '3px solid #0a0a0a',
+                boxShadow: '6px 6px 0px #00f0ff',
+              }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+                <WorkspacePremium sx={{ fontSize: 32, color: '#00f0ff' }} />
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontFamily: '"Bangers", sans-serif',
+                    letterSpacing: 1,
+                  }}
+                >
+                  CERTIFICATE MINTING
+                </Typography>
+              </Stack>
+              
+              {certificate ? (
+                <Box>
+                  <Alert severity="success" sx={{ mb: 2, border: '2px solid #0a0a0a' }}>
+                    Certificate minted successfully!
+                  </Alert>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Card sx={{ border: '2px solid #0a0a0a', mb: 2 }}>
+                        <CardContent>
+                          <Typography variant="caption" sx={{ fontFamily: '"Bangers", sans-serif' }}>
+                            CERTIFICATE ID
+                          </Typography>
+                          <Typography variant="body1" sx={{ fontFamily: 'monospace', mt: 1, fontWeight: 'bold' }}>
+                            {certificate.certificateId}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Card sx={{ border: '2px solid #0a0a0a', mb: 2 }}>
+                        <CardContent>
+                          <Typography variant="caption" sx={{ fontFamily: '"Bangers", sans-serif' }}>
+                            TRANSACTION HASH
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.7rem', wordBreak: 'break-all', mt: 1 }}>
+                            {certificate.txHash}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    {certificate.verifyUrl && (
+                      <Grid item xs={12}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          href={certificate.verifyUrl}
+                          target="_blank"
+                          startIcon={<Verified />}
+                          sx={{
+                            bgcolor: '#00f0ff',
+                            color: '#0a0a0a',
+                            fontWeight: 'bold',
+                            border: '2px solid #0a0a0a',
+                          }}
+                        >
+                          View on Blockchain Explorer
+                        </Button>
+                      </Grid>
+                    )}
+                    <Grid item xs={12}>
+                      <Typography variant="caption" sx={{ fontFamily: '"Space Grotesk", sans-serif', opacity: 0.7 }}>
+                        Network: {certificate.network} | Issued: {new Date(certificate.issuedAt).toLocaleString()}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              ) : (
+                <Box>
+                  {certificateError && (
+                    <Alert severity="error" sx={{ mb: 2, border: '2px solid #0a0a0a' }}>
+                      {certificateError}
+                    </Alert>
+                  )}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    onClick={handleMintCertificate}
+                    disabled={mintingCertificate || !result}
+                    startIcon={mintingCertificate ? <CircularProgress size={20} /> : <WorkspacePremium />}
+                    sx={{
+                      bgcolor: '#00f0ff',
+                      color: '#0a0a0a',
+                      fontWeight: 'bold',
+                      border: '3px solid #0a0a0a',
+                      boxShadow: '4px 4px 0px #0a0a0a',
+                      '&:hover': {
+                        bgcolor: '#00d0ef',
+                        transform: 'translate(2px, 2px)',
+                        boxShadow: '2px 2px 0px #0a0a0a',
+                      },
+                    }}
+                  >
+                    {mintingCertificate ? 'Minting Certificate...' : 'Mint Compliance Certificate'}
+                  </Button>
+                  <Typography variant="caption" sx={{ fontFamily: '"Space Grotesk", sans-serif', opacity: 0.7, display: 'block', mt: 2, textAlign: 'center' }}>
+                    This will mint a blockchain-certified compliance certificate for this emissions report
+                  </Typography>
                 </Box>
               )}
             </Paper>

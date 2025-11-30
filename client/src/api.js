@@ -51,3 +51,63 @@ export const verifyReportHash = (data, expectedHash) =>
  */
 export const verifyEvidenceMerkleRoot = (evidenceItems, expectedMerkleRoot) => 
   api.post('/api/data-freeze/verify-evidence', { evidenceItems, expectedMerkleRoot });
+
+// ===========================================================
+// CERTIFICATE MINTING API FUNCTIONS
+// ===========================================================
+
+/**
+ * Mint a compliance certificate from a frozen report
+ * POST /api/certificates/mint
+ * Body: { frozenReport: Object }
+ */
+export const mintCertificate = (frozenReport) => 
+  api.post('/api/certificates/mint', { frozenReport });
+
+/**
+ * Mint certificate from orchestrator analysis result
+ * POST /api/certificates/mint-from-analysis
+ * Body: { analysisResult: Object }
+ */
+export const mintCertificateFromAnalysis = (analysisResult) => 
+  api.post('/api/certificates/mint-from-analysis', { analysisResult });
+
+/**
+ * Get certificate minting status
+ * GET /api/certificates/mint-status
+ */
+export const getCertificateMintingStatus = () => 
+  api.get('/api/certificates/mint-status');
+
+/**
+ * Get recent orchestrator analysis results
+ * GET /api/orchestrator/results
+ */
+export const getOrchestratorResults = () => 
+  api.get('/api/orchestrator/results');
+
+// ===========================================================
+// COMPLIANCE LOG API FUNCTIONS
+// ===========================================================
+
+/**
+ * Get compliance log table rows and view payloads for a datacenter
+ * GET /api/reports?datacenter=<dc>
+ * Returns: { tableRows: [...], viewPayloads: {...} }
+ */
+export const getComplianceLogs = (datacenter) => 
+  api.get('/api/reports', { params: { datacenter } });
+
+/**
+ * Get detailed view payload for a specific period
+ * GET /api/reports/:period/details?datacenter=<dc>
+ */
+export const getPeriodDetails = (period, datacenter) => 
+  api.get(`/api/reports/${period}/details`, { params: { datacenter } });
+
+/**
+ * Get narrative for a specific period
+ * GET /api/reports/:period/narrative?datacenter=<dc>
+ */
+export const getPeriodNarrative = (period, datacenter) => 
+  api.get(`/api/reports/${period}/narrative`, { params: { datacenter } });
