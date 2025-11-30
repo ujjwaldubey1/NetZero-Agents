@@ -4,9 +4,12 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { createServer } from 'http';
 import { fileURLToPath } from 'url';
+import WebSocket, { WebSocketServer } from 'ws';
 import connectDb from './config/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { orchestratorEvents } from './services/orchestratorEvents.js';
 
 // New route structure
 import authRoutes from './routes/auth.routes.js';
@@ -133,8 +136,28 @@ const startServer = (port) => {
     console.log('  GET  /api/ipfs/retrieve/:cid - Retrieve file from IPFS');
     console.log('  GET  /api/orchestrator/status - Orchestrator service status');
     console.log('  POST /api/orchestrator/analyze - Generate comprehensive emissions analysis\n');
-  
-  const server = app.listen(port, () => {
+    console.log('  WS   /ws/orchestrator    - Live orchestrator activity feed\n');
+
+  const server = createServer(app);
+
+  // WebSocket: Live orchestrator activity feed
+  const wss = new WebSocketServer({ server, path: '/ws/orchestrator' });
+
+  // Broadcast all orchestrator events to connected clients
+  orchestratorEvents.on('event', (payload) => {
+    const msg = JSON.stringify(payload);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(msg);
+      }
+    });
+  });
+
+  wss.on('connection', (ws) => {
+    ws.send(JSON.stringify({ type: 'welcome', message: 'Connected to orchestrator live feed' }));
+  });
+
+  server.listen(port, () => {
     console.log(`NetZero Agents server running on port ${port}`);
   });
   server.on('error', (err) => {

@@ -27,5 +27,27 @@ router.get('/status', getOrchestratorStatus);
  */
 router.post('/analyze', authRequired, analyzeEmissions);
 
+router.post('/invite-bot', async (req, res) => {
+  try {
+    const { datacenter, period } = req.body;
+    const { inviteBot } = await import('../services/agents/inviteBot.js');
+    const result = await inviteBot(datacenter, period);
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/reminder-bot', async (req, res) => {
+  try {
+    const { datacenter, period } = req.body;
+    const { reminderBot } = await import('../services/agents/reminderBot.js');
+    const result = await reminderBot(datacenter, period);
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
 

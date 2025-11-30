@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Box, Typography, Chip, Stack } from '@mui/material';
+import { Box, Typography, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip, Grid, Card, CardContent } from '@mui/material';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Lock, CloudUpload, Shield, Verified, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Lock, CloudUpload, Shield, Verified, ExpandMore, ExpandLess, ContentCopy, OpenInNew, AccountBalanceWallet, Token } from '@mui/icons-material';
 import { colors } from '../utils/color';
 
 const getEventIcon = (type) => {
@@ -19,9 +19,39 @@ const getEventIcon = (type) => {
   }
 };
 
-const getDatacenter = (detail) => {
-  const match = detail?.match(/DC-(\w+)/);
-  return match ? `DC-${match[1]}` : 'DC-Unknown';
+const getDatacenter = (event) => {
+  // 1. Prefer explicit datacenter field
+  if (event.datacenter) return event.datacenter;
+  
+  // 2. Fallback to parsing detail string
+  const match = event.detail?.match(/DC-(\w+)/);
+  if (match) return `DC-${match[1]}`;
+  
+  // 3. Fallback to parsing "DC-Name" from detail if format is different
+  if (event.detail && event.detail.includes('DC-')) {
+     const parts = event.detail.split(' ');
+     const dcPart = parts.find(p => p.startsWith('DC-'));
+     if (dcPart) return dcPart.replace(/[^a-zA-Z0-9-]/g, '');
+  }
+
+  return 'DC-Unknown';
+};
+
+const extractEmissions = (detail) => {
+  if (!detail) return 0;
+  const match = detail.match(/(\d+(?:,\d+)*(?:\.\d+)?)\s*tons/i);
+  if (match) {
+    return parseFloat(match[1].replace(/,/g, ''));
+  }
+  return 0;
+};
+
+const extractTxId = (event) => {
+  if (event.cardanoTxHash) return { type: 'Cardano', id: event.cardanoTxHash };
+  if (event.hydraTxId) return { type: 'Hydra', id: event.hydraTxId };
+  if (event.reportHash) return { type: 'IPFS', id: event.reportHash };
+  if (event.proofHash) return { type: 'ZK Proof', id: event.proofHash };
+  return null;
 };
 
 const getZigzagPosition = (index) => {
@@ -102,6 +132,8 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
   const [isHovered, setIsHovered] = useState(false);
   const [cubeRef, setCubeRef] = useState(null);
   const position = getZigzagPosition(index);
+  const emissions = extractEmissions(event.detail);
+  const tx = extractTxId(event);
   
   const updatePosition = React.useCallback(() => {
     if (!cubeRef || !containerRef?.current) return;
@@ -159,7 +191,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
       }}
       style={{
         position: 'relative',
-        marginBottom: '120px',
+        marginBottom: '140px', // Increased spacing for larger blocks
         marginLeft: position.x,
         width: 'fit-content',
       }}
@@ -168,7 +200,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
     >
       <motion.div
         animate={{ 
-          scale: isHovered ? 1.5 : 1,
+          scale: isHovered ? 1.3 : 1,
           z: isHovered ? 100 : 0,
           rotateY: isHovered ? 0 : rotation.rotateY,
           rotateX: isHovered ? 0 : rotation.rotateX,
@@ -184,15 +216,15 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
       >
         <Box
           sx={{
-            width: isHovered ? '300px' : '150px',
-            height: isHovered ? '300px' : '150px',
+            width: isHovered ? '320px' : '180px', // Larger blocks
+            height: isHovered ? '320px' : '180px',
             position: 'relative',
             transformStyle: 'preserve-3d',
             transform: `rotate(${position.rotate}deg)`,
             transition: 'width 0.3s, height 0.3s',
           }}
         >
-          {/* Front Face */}
+          {/* Front Face - NOW SHOWING DATA ALWAYS */}
           <Box
             sx={{
               position: 'absolute',
@@ -201,7 +233,7 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
               bgcolor: '#ffffff',
               border: '4px solid #0a0a0a',
               boxShadow: `8px 8px 0px ${assignedColor}`,
-              transform: 'translateZ(75px)',
+              transform: 'translateZ(90px)', // Adjusted for larger size
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -212,59 +244,87 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
           >
             {getEventIcon(event.type)}
             
-            {!isHovered ? (
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontFamily: '"Bangers", sans-serif',
+                mt: 1,
+                textAlign: 'center',
+                fontSize: isHovered ? '1.2rem' : '0.9rem',
+                letterSpacing: 1,
+                lineHeight: 1.1,
+              }}
+            >
+              {event.type.split('_')[0]}
+            </Typography>
+
+            {/* Always show CO2 if available */}
+            {emissions > 0 && (
+              <Chip 
+                label={`${emissions}t CO2e`} 
+                size="small" 
+                sx={{ 
+                  mt: 1, 
+                  height: 24, 
+                  fontSize: '0.75rem', 
+                  bgcolor: '#fcee0a', 
+                  fontWeight: 'bold',
+                  border: '1px solid #000'
+                }} 
+              />
+            )}
+
+            {/* Always show TX ID if available (shortened) */}
+            {tx && !isHovered && (
               <Typography 
                 variant="caption" 
                 sx={{ 
-                  fontFamily: '"Bangers", sans-serif',
+                  fontFamily: 'monospace',
+                  fontSize: '0.65rem',
                   mt: 1,
-                  textAlign: 'center',
-                  fontSize: '0.75rem',
-                  letterSpacing: 1,
+                  bgcolor: '#f0f0f0',
+                  px: 0.5,
+                  borderRadius: 1,
+                  border: '1px dashed #ccc'
                 }}
               >
-                {event.type.split('_')[0]}
+                TX: {tx.id.substring(0, 6)}...
               </Typography>
-            ) : (
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-               <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    fontFamily: '"Bangers", sans-serif',
-                    fontSize: '1rem',
-                    display: 'block',
-                    letterSpacing: 1,
-                  }}
-                >
-                  {event.type.replace(/_/g, ' ')}
-                </Typography>
+            )}
+
+            {/* Expanded details on hover */}
+            {isHovered && (
+              <Box sx={{ mt: 1, textAlign: 'center', width: '100%' }}>
                 <Typography 
                   variant="caption" 
                   sx={{ 
                     fontFamily: '"Space Grotesk", sans-serif',
-                    fontSize: '0.7rem',
+                    fontSize: '0.75rem',
                     display: 'block',
-                    mt: 1,
-                    maxHeight: '100px',
+                    maxHeight: '80px',
                     overflow: 'auto',
                     lineHeight: 1.3,
+                    mb: 1
                   }}
                 >
                   {event.detail}
                 </Typography>
-                {event.cardanoTxHash && (
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      fontFamily: 'monospace',
-                      fontSize: '0.6rem',
-                      display: 'block',
-                      mt: 1,
-                      opacity: 0.7,
+                {tx && (
+                  <Chip 
+                    icon={<ContentCopy sx={{ fontSize: '12px !important' }} />}
+                    label={`${tx.type}: ${tx.id.substring(0, 8)}...`}
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(tx.id);
                     }}
-                  >
-                    TX: {event.cardanoTxHash.substring(0, 12)}...
-                  </Typography>
+                    sx={{ 
+                      bgcolor: '#e0e0e0', 
+                      fontFamily: 'monospace',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: '#d0d0d0' }
+                    }} 
+                  />
                 )}
               </Box>
             )}
@@ -273,11 +333,9 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
               variant="caption" 
               sx={{ 
                 fontFamily: 'monospace',
-                fontSize: isHovered ? '0.7rem' : '0.6rem',
-                mt: isHovered ? 1 : 0.5,
+                fontSize: '0.6rem',
+                mt: 'auto',
                 opacity: 0.7,
-                position: isHovered ? 'relative' : 'absolute',
-                bottom: isHovered ? 'auto' : '8px',
               }}
             >
               {new Date(event.timestamp).toLocaleDateString()}
@@ -285,67 +343,150 @@ const CubeBlock = ({ event, index, mousePosition, onPositionChange, containerRef
           </Box>
 
           {/* Back Face */}
-          <Box
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              bgcolor: assignedColor,
-              border: '4px solid #0a0a0a',
-              transform: 'translateZ(-75px) rotateY(180deg)',
-            }}
-          />
+          <Box sx={{ position: 'absolute', width: '100%', height: '100%', bgcolor: assignedColor, border: '4px solid #0a0a0a', transform: 'translateZ(-90px) rotateY(180deg)' }} />
           {/* Top Face */}
-          <Box
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              bgcolor: '#ffffff',
-              border: '4px solid #0a0a0a',
-              transform: 'rotateX(90deg) translateZ(75px)',
-              opacity: 0.9,
-            }}
-          />
+          <Box sx={{ position: 'absolute', width: '100%', height: '100%', bgcolor: '#ffffff', border: '4px solid #0a0a0a', transform: 'rotateX(90deg) translateZ(90px)', opacity: 0.9 }} />
           {/* Bottom Face */}
-          <Box
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              bgcolor: '#f0f0f0',
-              border: '4px solid #0a0a0a',
-              transform: 'rotateX(-90deg) translateZ(75px)',
-              opacity: 0.8,
-            }}
-          />
+          <Box sx={{ position: 'absolute', width: '100%', height: '100%', bgcolor: '#f0f0f0', border: '4px solid #0a0a0a', transform: 'rotateX(-90deg) translateZ(90px)', opacity: 0.8 }} />
           {/* Left Face */}
-          <Box
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              bgcolor: '#f5f5f5',
-              border: '4px solid #0a0a0a',
-              transform: 'rotateY(-90deg) translateZ(75px)',
-              opacity: 0.9,
-            }}
-          />
+          <Box sx={{ position: 'absolute', width: '100%', height: '100%', bgcolor: '#f5f5f5', border: '4px solid #0a0a0a', transform: 'rotateY(-90deg) translateZ(90px)', opacity: 0.9 }} />
           {/* Right Face */}
-          <Box
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              bgcolor: '#f5f5f5',
-              border: '4px solid #0a0a0a',
-              transform: 'rotateY(90deg) translateZ(75px)',
-              opacity: 0.9,
-            }}
-          />
+          <Box sx={{ position: 'absolute', width: '100%', height: '100%', bgcolor: '#f5f5f5', border: '4px solid #0a0a0a', transform: 'rotateY(90deg) translateZ(90px)', opacity: 0.9 }} />
         </Box>
       </motion.div>
     </motion.div>
+  );
+};
+
+const WalletPanel = ({ events, datacenter }) => {
+  // Calculate credits based on a hypothetical threshold (e.g., 1000t per quarter)
+  // In a real app, this would come from the backend's carbonCreditsAgent
+  const totalEmissions = events.reduce((sum, event) => sum + extractEmissions(event.detail), 0);
+  const threshold = 1500; // Example threshold
+  const creditBalance = threshold - totalEmissions;
+  const isSurplus = creditBalance >= 0;
+
+  return (
+    <Card sx={{ mb: 4, border: '4px solid #0a0a0a', boxShadow: '8px 8px 0px #00f0ff', bgcolor: '#fff' }}>
+      <CardContent>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+          <Box>
+            <Typography variant="h5" sx={{ fontFamily: '"Bangers", sans-serif', letterSpacing: 1 }}>
+              CARBON CREDIT WALLET
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: '"Space Grotesk", sans-serif', opacity: 0.7 }}>
+              {datacenter} • Q4 2025
+            </Typography>
+          </Box>
+          
+          <Stack direction="row" spacing={4} alignItems="center">
+            <Box textAlign="center">
+              <Typography variant="caption" sx={{ fontFamily: 'monospace', display: 'block' }}>THRESHOLD</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{threshold}t</Typography>
+            </Box>
+            <Box textAlign="center">
+              <Typography variant="caption" sx={{ fontFamily: 'monospace', display: 'block' }}>USED</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', color: isSurplus ? 'success.main' : 'error.main' }}>
+                {totalEmissions.toLocaleString()}t
+              </Typography>
+            </Box>
+            <Box 
+              sx={{ 
+                bgcolor: isSurplus ? '#e8f5e9' : '#ffebee', 
+                p: 2, 
+                borderRadius: 2, 
+                border: '2px solid',
+                borderColor: isSurplus ? 'success.main' : 'error.main',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}
+            >
+              <Token sx={{ fontSize: 40, color: isSurplus ? 'success.main' : 'error.main' }} />
+              <Box>
+                <Typography variant="caption" sx={{ fontWeight: 'bold', color: isSurplus ? 'success.dark' : 'error.dark' }}>
+                  {isSurplus ? 'AVAILABLE CREDITS' : 'CREDIT DEFICIT'}
+                </Typography>
+                <Typography variant="h4" sx={{ fontFamily: '"Bangers", sans-serif', color: isSurplus ? 'success.main' : 'error.main' }}>
+                  {Math.abs(creditBalance).toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+};
+
+const LedgerTable = ({ events }) => {
+  return (
+    <TableContainer component={Paper} sx={{ mt: 4, bgcolor: '#ffffff', border: '2px solid #0a0a0a', boxShadow: '4px 4px 0px #0a0a0a' }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow sx={{ bgcolor: '#f0f0f0' }}>
+            <TableCell sx={{ fontWeight: 'bold', fontFamily: '"Space Grotesk"' }}>EVENT TYPE</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', fontFamily: '"Space Grotesk"' }}>TIMESTAMP</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', fontFamily: '"Space Grotesk"' }}>EMISSIONS</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', fontFamily: '"Space Grotesk"' }}>TX REF</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', fontFamily: '"Space Grotesk"' }}>DETAILS</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {events.map((event) => {
+            const emissions = extractEmissions(event.detail);
+            const tx = extractTxId(event);
+            return (
+              <TableRow key={event._id} hover>
+                <TableCell>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    {getEventIcon(event.type)}
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                      {event.type.replace(/_/g, ' ')}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell sx={{ fontFamily: 'monospace' }}>
+                  {new Date(event.timestamp).toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  {emissions > 0 ? (
+                    <Chip label={`${emissions}t`} size="small" sx={{ bgcolor: '#fcee0a', fontWeight: 'bold' }} />
+                  ) : (
+                    <Typography variant="caption" sx={{ opacity: 0.5 }}>-</Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {tx ? (
+                    <Tooltip title={`Copy ${tx.type} ID`}>
+                      <Chip 
+                        icon={<ContentCopy sx={{ fontSize: '14px !important' }} />}
+                        label={`${tx.type}: ${tx.id.substring(0, 8)}...`} 
+                        size="small" 
+                        onClick={() => navigator.clipboard.writeText(tx.id)}
+                        sx={{ 
+                          bgcolor: '#e0e0e0', 
+                          fontFamily: 'monospace',
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: '#d0d0d0' }
+                        }} 
+                      />
+                    </Tooltip>
+                  ) : (
+                    <Typography variant="caption" sx={{ opacity: 0.5 }}>Pending</Typography>
+                  )}
+                </TableCell>
+                <TableCell sx={{ maxWidth: 300 }}>
+                  <Typography variant="caption" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {event.detail}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
 
@@ -355,6 +496,10 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
   const [positions, setPositions] = useState({});
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = React.useRef(null);
+
+  const totalEmissions = useMemo(() => {
+    return events.reduce((sum, event) => sum + extractEmissions(event.detail), 0);
+  }, [events]);
 
   // Assign colors ensuring no two linked blocks have the same color
   const eventColors = useMemo(() => {
@@ -421,9 +566,18 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
               <Typography variant="h4" sx={{ fontFamily: '"Bangers", sans-serif', letterSpacing: 2, color: '#0a0a0a', textShadow: '2px 2px 0px #fcee0a' }}>
                 {datacenter}
               </Typography>
-              <Typography variant="body2" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 600, opacity: 0.7, mt: 0.5 }}>
-                {eventCount} blockchain event{eventCount !== 1 ? 's' : ''}
-              </Typography>
+              <Stack direction="row" spacing={2} mt={0.5}>
+                <Typography variant="body2" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontWeight: 600, opacity: 0.7 }}>
+                  {eventCount} blockchain event{eventCount !== 1 ? 's' : ''}
+                </Typography>
+                {totalEmissions > 0 && (
+                  <Chip 
+                    label={`Total: ${totalEmissions.toLocaleString()}t CO2e`} 
+                    size="small" 
+                    sx={{ bgcolor: '#00f0ff', fontWeight: 'bold', border: '1px solid #000' }} 
+                  />
+                )}
+              </Stack>
             </Box>
             <Chip
               label={isExpanded ? 'COLLAPSE' : 'EXPAND'}
@@ -457,6 +611,11 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
             >
               {/* Parallax Background */}
               <ParallaxBackground containerRef={containerRef} eventCount={eventCount} />
+
+              {/* Wallet Panel */}
+              <Box sx={{ position: 'relative', zIndex: 2, mb: 4 }}>
+                <WalletPanel events={events} datacenter={datacenter} />
+              </Box>
 
               {/* Animated Background Elements */}
               <Box
@@ -580,6 +739,15 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
                   />
                 ))}
               </Box>
+              
+              {/* Detailed Ledger Table */}
+              <Box sx={{ position: 'relative', zIndex: 1, mt: 4 }}>
+                <Typography variant="h6" sx={{ fontFamily: '"Bangers", sans-serif', color: '#fff', mb: 2, letterSpacing: 1 }}>
+                  📋 LEDGER DETAILS
+                </Typography>
+                <LedgerTable events={events} />
+              </Box>
+
             </Box>
           </motion.div>
         )}
@@ -588,21 +756,46 @@ const DatacenterBlock = ({ datacenter, events, isExpanded, isOtherExpanded, onTo
   );
 };
 
-const BlockchainVisualization = ({ events }) => {
+const BlockchainVisualization = ({ events, datacenters = [] }) => {
   const [expandedDatacenter, setExpandedDatacenter] = useState(null);
 
-  const datacenterGroups = events.reduce((acc, event) => {
-    const dc = getDatacenter(event.detail);
-    if (!acc[dc]) acc[dc] = [];
-    acc[dc].push(event);
-    return acc;
-  }, {});
+  // Group events by datacenter
+  const datacenterGroups = useMemo(() => {
+    const groups = {};
+    
+    // Initialize with fetched datacenters
+    datacenters.forEach(dc => {
+      groups[dc.name] = [];
+    });
+
+    // Add events to groups
+    if (events) {
+      events.forEach(event => {
+        // Pass the whole event object now
+        let dcName = getDatacenter(event);
+        
+        // If still unknown, try to match against known datacenters
+        if (dcName === 'DC-Unknown') {
+           const knownDc = datacenters.find(d => event.detail?.includes(d.name));
+           if (knownDc) dcName = knownDc.name;
+        }
+
+        if (!groups[dcName]) {
+          // If the datacenter group doesn't exist (and wasn't in fetched datacenters), create it
+          groups[dcName] = [];
+        }
+        groups[dcName].push(event);
+      });
+    }
+    
+    return groups;
+  }, [events, datacenters]);
 
   const toggleDatacenter = (dc) => {
     setExpandedDatacenter(expandedDatacenter === dc ? null : dc);
   };
 
-  if (!events || events.length === 0) {
+  if ((!events || events.length === 0) && datacenters.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
         <Typography variant="h6" fontFamily='"Bangers", sans-serif' color="#0a0a0a">NO BLOCKS YET</Typography>

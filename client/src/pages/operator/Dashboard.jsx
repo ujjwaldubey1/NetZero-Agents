@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Button, Grid, Typography, Stack, Alert } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Button, Grid, Typography, Stack, Alert, FormControl, InputLabel, Select, MenuItem, Card, CardContent, Divider, Chip, CircularProgress, TextField } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion, useSpring, useTransform } from 'framer-motion';
-import api from '../../api';
+import api, { analyzeEmissions, fetchDataCenters, getOrchestratorStatus, triggerInviteBot, triggerReminderBot } from '../../api';
 import DashboardCards from '../../components/DashboardCards';
 import MemeLayout from '../../components/MemeLayout';
 import { ASSETS } from '../../assets';
@@ -24,12 +24,34 @@ const OperatorDashboard = () => {
   const [report, setReport] = useState(null);
   const [trend, setTrend] = useState([]);
   const [error, setError] = useState(null);
-  const period = '2025-Q4';
+  const [selectedPeriod, setSelectedPeriod] = useState(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const q = Math.ceil((now.getMonth() + 1) / 3);
+    return `${year}-Q${q}`;
+  });
+  const [datacenters, setDatacenters] = useState([]);
+  const [selectedDatacenter, setSelectedDatacenter] = useState('');
+  const [orchLoading, setOrchLoading] = useState(false);
+  const [orchError, setOrchError] = useState(null);
+  const [orchResult, setOrchResult] = useState(null);
+  const [orchStatus, setOrchStatus] = useState(null);
+  const [liveLogs, setLiveLogs] = useState([]);
+  const [wsState, setWsState] = useState('idle');
 
-  const load = async () => {
+  const addLog = (entry) => {
+    setLiveLogs((prev) => [
+      ...prev.slice(-29),
+      {
+        ...entry,
+        ts: entry.ts || new Date().toISOString(),
+        payload: entry.payload || entry,
+      },
+    ]);
+  };
+
+  const load = async (periodOverride) => {
     try {
-      const rep = await api.get('/api/reports/current', { params: { period } });
-      setReport(rep.data);
       const emissions = await api.get('/api/emissions/by-period');
       const map = {};
       emissions.data.forEach((r) => {
@@ -40,15 +62,138 @@ const OperatorDashboard = () => {
           r.extractedData?.[`scope${r.scope}`]?.upstream_co2_tons ||
           0;
       });
-      setTrend(Object.values(map));
+
+      const periodsDesc = Object.values(map).sort((a, b) => (a.period > b.period ? -1 : 1));
+      const periodToUse = periodOverride || (periodsDesc[0]?.period || selectedPeriod);
+
+      // If we found a period in emissions and current selected isn't present, switch to it
+      if (periodsDesc.length > 0 && !map[selectedPeriod]) {
+        setSelectedPeriod(periodToUse);
+      }
+
+      // Trend chart sorted ascending for readability
+      setTrend(periodsDesc.slice().reverse());
+
+      // Prefer backend report for the chosen period; fall back to emissions aggregate
+      let rep = null;
+      try {
+        rep = await api.get('/api/reports/current', { params: { period: periodToUse } });
+      } catch (err) {
+        console.warn('Report fetch failed, using emissions fallback', err.message);
+      }
+
+      if (rep?.data?.scopeTotals) {
+        setReport(rep.data);
+      } else {
+        const fallback = map[periodToUse] || { scope1: 0, scope2: 0, scope3: 0, period: periodToUse };
+        setReport({
+          scopeTotals: {
+            scope1: { diesel_co2_tons: fallback.scope1 },
+            scope2: { electricity_co2_tons: fallback.scope2 },
+            scope3: { upstream_co2_tons: fallback.scope3 },
+          },
+          period: periodToUse,
+          status: 'draft',
+        });
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     }
   };
 
+  const loadMeta = async () => {
+    try {
+      const [dcRes, statusRes] = await Promise.all([
+        fetchDataCenters(),
+        getOrchestratorStatus().catch(() => ({ data: null })),
+      ]);
+      const dcList = dcRes.data?.data || dcRes.data || [];
+      setDatacenters(Array.isArray(dcList) ? dcList : []);
+      if (Array.isArray(dcList) && dcList.length > 0) {
+        setSelectedDatacenter((prev) => prev || dcList[0].name || dcList[0]._id);
+      }
+      setOrchStatus(statusRes.data || null);
+    } catch (err) {
+      console.error('Meta load failed', err);
+    }
+  };
+
   useEffect(() => {
     load();
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    loadMeta();
   }, []);
+
+  useEffect(() => {
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:4000/ws/orchestrator';
+    let socket;
+    try {
+      socket = new WebSocket(wsUrl);
+    } catch (err) {
+      setWsState('error');
+      addLog({ level: 'warn', msg: `WebSocket init failed (${err.message})` });
+      return undefined;
+    }
+
+    setWsState('connecting');
+    socket.onopen = () => setWsState('connected');
+    socket.onclose = () => setWsState('closed');
+    socket.onerror = () => setWsState('error');
+    socket.onmessage = (evt) => {
+      try {
+        const parsed = JSON.parse(evt.data);
+        addLog({
+          level: parsed.level || parsed.type || 'info',
+          msg: parsed.message || parsed.msg || evt.data,
+          ts: parsed.ts || parsed.timestamp || new Date().toISOString(),
+          payload: parsed,
+        });
+      } catch {
+        addLog({ level: 'info', msg: evt.data, payload: { raw: evt.data } });
+      }
+    };
+
+    return () => {
+      socket && socket.close();
+    };
+  }, []);
+
+  const triggerOrchestrator = async () => {
+    if (!selectedDatacenter || !selectedPeriod) {
+      setOrchError('Select a datacenter and period first.');
+      return;
+    }
+    setOrchLoading(true);
+    setOrchError(null);
+    setOrchResult(null);
+    addLog({ level: 'info', msg: `Triggering orchestrator for ${selectedDatacenter} @ ${selectedPeriod}` });
+    try {
+      const res = await analyzeEmissions(selectedDatacenter, selectedPeriod);
+      setOrchResult({
+        datacenter: selectedDatacenter,
+        period: selectedPeriod,
+        reportHash: res.data?.cryptographic_proofs?.report_hash,
+        merkleRoot: res.data?.cryptographic_proofs?.evidence_merkle_root,
+        timestamp: new Date().toISOString(),
+      });
+      addLog({
+        level: 'success',
+        msg: `Orchestrator completed. Hash: ${res.data?.cryptographic_proofs?.report_hash?.substring(0, 10) || 'n/a'}...`,
+      });
+      // Pull latest persisted report/trend from backend so cards and chart use stored data
+      await load();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Orchestrator failed';
+      setOrchError(msg);
+      addLog({ level: 'error', msg });
+    } finally {
+      setOrchLoading(false);
+    }
+  };
+
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -139,17 +284,169 @@ const OperatorDashboard = () => {
             </Box>
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="contained" color="primary" onClick={() => alert('Vendor invite bot triggered')} sx={{ fontWeight: 'bold', border: '2px solid #0a0a0a' }}>Vendor Invite Bot</Button>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={async () => {
+                    if (!selectedDatacenter || !selectedPeriod) return alert('Select DC and Period first');
+                    addLog({ level: 'info', msg: 'Triggering Invite Bot...' });
+                    try {
+                      const res = await triggerInviteBot(selectedDatacenter, selectedPeriod);
+                      addLog({ level: 'success', msg: `Invite Bot: Sent ${res.data.result.sent} emails` });
+                    } catch (e) {
+                      console.error(e);
+                      const errorMsg = e.response?.data?.error || e.message || 'Unknown error';
+                      addLog({ level: 'error', msg: `Invite Bot failed: ${errorMsg}` });
+                    }
+                  }} 
+                  sx={{ fontWeight: 'bold', border: '2px solid #0a0a0a' }}
+                >
+                  Vendor Invite Bot
+                </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="outlined" sx={{ color: '#0a0a0a', borderColor: '#0a0a0a', fontWeight: 'bold', border: '2px solid #0a0a0a', '&:hover': { bgcolor: '#fcee0a', borderColor: '#0a0a0a' } }} onClick={() => alert('Report checks bot triggered')}>Report Checks Bot</Button>
+                <Button 
+                  variant="outlined" 
+                  sx={{ color: '#0a0a0a', borderColor: '#0a0a0a', fontWeight: 'bold', border: '2px solid #0a0a0a', '&:hover': { bgcolor: '#fcee0a', borderColor: '#0a0a0a' } }} 
+                  onClick={async () => {
+                    if (!selectedDatacenter || !selectedPeriod) return alert('Select DC and Period first');
+                    addLog({ level: 'info', msg: 'Triggering Reminder Bot...' });
+                    try {
+                      const res = await triggerReminderBot(selectedDatacenter, selectedPeriod);
+                      addLog({ level: 'success', msg: `Reminder Bot: Sent ${res.data.result.sent} reminders` });
+                    } catch (e) {
+                      console.error(e);
+                      const errorMsg = e.response?.data?.error || e.message || 'Unknown error';
+                      addLog({ level: 'error', msg: `Reminder Bot failed: ${errorMsg}` });
+                    }
+                  }}
+                >
+                  Report Checks Bot
+                </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="contained" color="secondary" onClick={() => alert('Agent triggered')} sx={{ fontWeight: 'bold', border: '2px solid #0a0a0a' }}>Agent</Button>
+                <Button variant="contained" color="secondary" onClick={triggerOrchestrator} disabled={orchLoading} sx={{ fontWeight: 'bold', border: '2px solid #0a0a0a' }}>
+                  {orchLoading ? <CircularProgress size={18} color="inherit" /> : 'Run Orchestrator'}
+                </Button>
               </motion.div>
             </Stack>
           </motion.div>
         </motion.div>
+
+        {/* Orchestrator control strip */}
+        <Card sx={{ mb: 4, border: '3px solid #0a0a0a', boxShadow: '10px 10px 0px #0a0a0a' }}>
+          <CardContent>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Datacenter</InputLabel>
+                <Select
+                  value={selectedDatacenter}
+                  label="Datacenter"
+                  onChange={(e) => setSelectedDatacenter(e.target.value)}
+                >
+                  {datacenters.map((dc) => (
+                    <MenuItem key={dc._id || dc.name} value={dc.name || dc._id}>
+                      {dc.name || dc._id}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Year"
+                type="number"
+                value={selectedPeriod.split('-')[0]}
+                onChange={(e) => {
+                  const newYear = e.target.value;
+                  const currentQuarter = selectedPeriod.split('-')[1];
+                  setSelectedPeriod(`${newYear}-${currentQuarter}`);
+                }}
+                sx={{ width: 100 }}
+                inputProps={{ min: 2020, max: 2030 }}
+              />
+              <FormControl sx={{ minWidth: 120 }}>
+                <InputLabel>Quarter</InputLabel>
+                <Select
+                  value={selectedPeriod.split('-')[1]}
+                  label="Quarter"
+                  onChange={(e) => {
+                    const newQuarter = e.target.value;
+                    const currentYear = selectedPeriod.split('-')[0];
+                    setSelectedPeriod(`${currentYear}-${newQuarter}`);
+                  }}
+                >
+                  {['Q1', 'Q2', 'Q3', 'Q4'].map((q) => (
+                    <MenuItem key={q} value={q}>{q}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip label={orchStatus?.llm_provider || 'LLM: n/a'} color={orchStatus?.llm_configured ? 'success' : 'default'} />
+                <Chip label={orchStatus?.masumi_blockchain?.enabled ? 'Masumi ON' : 'Masumi OFF'} color={orchStatus?.masumi_blockchain?.enabled ? 'success' : 'default'} />
+              </Stack>
+              <Box flexGrow={1} />
+              <Button variant="contained" color="secondary" onClick={triggerOrchestrator} disabled={orchLoading || !selectedDatacenter} sx={{ fontWeight: 'bold', border: '2px solid #0a0a0a', minWidth: 180 }}>
+                {orchLoading ? <CircularProgress size={18} color="inherit" /> : 'Trigger AI Agent'}
+              </Button>
+            </Stack>
+            <Typography variant="caption" sx={{ mt: 1, display: 'block', opacity: 0.8, fontFamily: '"Bangers", sans-serif', letterSpacing: 0.5 }}>
+              PICK YOUR BASE + QUARTER (YYYY-Q#) THEN SMASH TRIGGER — COMMAND CENTER WILL HIT THE ORCHESTRATOR INSTANTLY.
+            </Typography>
+            {orchError && <Alert severity="error" sx={{ mt: 2 }}>{orchError}</Alert>}
+            {orchResult && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                {orchResult.datacenter} @ {orchResult.period} → report hash {orchResult.reportHash || 'n/a'}
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Live AI activity feed */}
+        <Card sx={{ mb: 4, border: '3px solid #0a0a0a', boxShadow: '10px 10px 0px #00f0ff' }}>
+          <CardContent>
+            <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2} mb={2}>
+              <Typography variant="h5" sx={{ fontFamily: '"Bangers", sans-serif', letterSpacing: 1 }}>LIVE AI AGENT ACTIVITY</Typography>
+              <Chip label={`WebSocket: ${wsState}`} color={wsState === 'connected' ? 'success' : wsState === 'error' ? 'error' : 'default'} />
+            </Stack>
+            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ maxHeight: 320, overflow: 'auto', bgcolor: '#0a0a0a', color: '#00f0ff', p: 2, borderRadius: 1, border: '2px solid #00f0ff', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+              {liveLogs.length === 0 && (
+                <Typography variant="body2" sx={{ color: '#fcee0a' }}>
+                  Waiting for events... configure VITE_WS_URL to point to your orchestrator stream (e.g., ws://localhost:4000/ws/orchestrator).
+                </Typography>
+              )}
+              {liveLogs.slice().reverse().map((log, idx) => {
+                const color = log.level === 'error' ? '#ff0055' : log.level === 'success' ? '#00f0ff' : '#ffffff';
+                const meta = log.payload || {};
+                return (
+                  <Box key={`${log.ts}-${idx}`} sx={{ mb: 2, borderBottom: '1px solid rgba(255,255,255,0.1)', pb: 1 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                      <Box component="span" sx={{ color: '#fcee0a' }}>[{new Date(log.ts).toLocaleTimeString()}]</Box>
+                      <Box component="span" sx={{ color, fontWeight: 700 }}>{(log.level || 'INFO').toUpperCase()}</Box>
+                      {meta.stage && <Box component="span" sx={{ color: '#fcee0a' }}>stage: {meta.stage}</Box>}
+                      {meta.jobId && <Box component="span" sx={{ color: '#fcee0a' }}>job: {meta.jobId}</Box>}
+                      {meta.datacenter && <Box component="span" sx={{ color: '#fcee0a' }}>dc: {meta.datacenter}</Box>}
+                      {meta.period && <Box component="span" sx={{ color: '#fcee0a' }}>period: {meta.period}</Box>}
+                    </Box>
+                    <Box sx={{ mt: 0.5, color: '#fff' }}>{log.msg}</Box>
+                    {(meta.reportHash || meta.merkleRoot || meta.evidenceCount !== undefined || meta.masumiTransactions !== undefined) && (
+                      <Box sx={{ mt: 0.5, color: '#00f0ff' }}>
+                        {meta.reportHash && <div>reportHash: {meta.reportHash}</div>}
+                        {meta.merkleRoot && <div>merkleRoot: {meta.merkleRoot}</div>}
+                        {meta.evidenceCount !== undefined && <div>evidenceCount: {meta.evidenceCount}</div>}
+                        {meta.masumiTransactions !== undefined && <div>masumiTx: {meta.masumiTransactions}</div>}
+                      </Box>
+                    )}
+                    {meta && Object.keys(meta).length > 0 && (
+                      <Box sx={{ mt: 0.5, bgcolor: '#111', p: 1, borderRadius: 1, border: '1px solid rgba(0,240,255,0.3)', color: '#9be7ff' }}>
+                        {JSON.stringify(meta, null, 2)}
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          </CardContent>
+        </Card>
 
         {error && <Alert severity="error" sx={{ mt: 2, border: '3px solid #0a0a0a', boxShadow: '5px 5px 0px #0a0a0a' }}>{error}</Alert>}
 
@@ -208,7 +505,7 @@ const OperatorDashboard = () => {
             </motion.div>
           </Grid>
 
-          {/* Status Section */}
+          {/* Status Section (now mirrors WebSocket state instead of static report status) */}
           <Grid item xs={12} md={4}>
             <motion.div variants={itemVariants} style={{ height: '100%' }}>
               <motion.div 
@@ -224,60 +521,27 @@ const OperatorDashboard = () => {
                 }}
               >
                 <Typography variant="h5" gutterBottom sx={{ color: '#fff', textShadow: '2px 2px 0px #ff0055', fontFamily: '"Bangers", sans-serif', letterSpacing: 1 }}>
-                  MISSION LOG
+                  LIVE FEED SNAPSHOT
                 </Typography>
-                <Box sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1.1rem', lineHeight: 2 }}>
+                <Box sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1rem', lineHeight: 1.8 }}>
                   <Box display="flex" justifyContent="space-between" borderBottom="1px dashed #333" py={1}>
-                    <span>STATUS:</span>
-                    <span style={{ color: '#fcee0a', fontWeight: 'bold' }}>{report?.status || 'DRAFT'}</span>
+                    <span>WS STATE:</span>
+                    <span style={{ color: wsState === 'connected' ? '#00f0ff' : '#fcee0a', fontWeight: 'bold' }}>{wsState.toUpperCase()}</span>
                   </Box>
                   <Box display="flex" justifyContent="space-between" borderBottom="1px dashed #333" py={1}>
-                    <span>PERIOD:</span>
-                    <span>{report?.period || 'N/A'}</span>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between" borderBottom="1px dashed #333" py={1}>
-                    <span>RECORDS:</span>
-                    <span style={{ fontWeight: 'bold', color: '#00f0ff' }}>
-                      <AnimatedCounter value={report?.details?.records?.length || 0} />
+                    <span>LAST EVENT:</span>
+                    <span style={{ color: '#fcee0a', maxWidth: '50%', textAlign: 'right' }}>
+                      {liveLogs.length ? liveLogs[liveLogs.length - 1].msg : 'Waiting for stream...'}
                     </span>
                   </Box>
+                  <Box display="flex" justifyContent="space-between" borderBottom="1px dashed #333" py={1}>
+                    <span>STREAM:</span>
+                    <span style={{ color: '#fff' }}>{import.meta.env.VITE_WS_URL || 'ws://localhost:4000/ws/orchestrator'}</span>
+                  </Box>
                 </Box>
-                
-                <Stack spacing={2} mt={4}>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      component={Link} 
-                      to="/operator/reports" 
-                      fullWidth 
-                      variant="contained" 
-                      color="primary"
-                      sx={{ 
-                        '&:hover': { bgcolor: '#fff' },
-                        fontWeight: 'bold',
-                        border: '2px solid #fff'
-                      }}
-                    >
-                      FREEZE / NARRATIVE
-                    </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button 
-                      component={Link} 
-                      to="/operator/certificates" 
-                      fullWidth 
-                      variant="outlined" 
-                      sx={{ 
-                        borderColor: '#fff', 
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        border: '2px solid #fff',
-                        '&:hover': { borderColor: '#00f0ff', color: '#00f0ff', bgcolor: 'rgba(0, 240, 255, 0.1)' }
-                      }}
-                    >
-                      ISSUE CERTIFICATE
-                    </Button>
-                  </motion.div>
-                </Stack>
+                <Alert severity="info" sx={{ mt: 3, bgcolor: '#0a0a0a', color: '#fcee0a', border: '1px solid #fcee0a' }}>
+                  Freezing is default; use the live WebSocket feed to track agent progress in real time.
+                </Alert>
               </motion.div>
             </motion.div>
           </Grid>

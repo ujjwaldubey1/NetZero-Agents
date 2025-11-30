@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Card, CardContent, MenuItem, TextField, Typography, Alert } from '@mui/material';
+import { Box, Button, Card, CardContent, MenuItem, TextField, Typography, Alert, Stack } from '@mui/material';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const UploadForm = ({ defaultScope = 1, defaultPeriod = '2025-Q4', allowedScopes = [1, 2, 3], onUploaded }) => {
   const { user } = useAuth();
   const [scope, setScope] = useState(defaultScope || allowedScopes[0]);
-  const [period, setPeriod] = useState(defaultPeriod);
+  const getInitialYearQuarter = (value) => {
+    const match = `${value}`.match(/(\d{4})-Q([1-4])/);
+    if (match) return { year: match[1], quarter: match[2] };
+    const now = new Date();
+    const year = now.getFullYear().toString();
+    const quarter = Math.ceil((now.getMonth() + 1) / 3).toString();
+    return { year, quarter };
+  };
+  const initial = getInitialYearQuarter(defaultPeriod);
+  const [year, setYear] = useState(initial.year);
+  const [quarter, setQuarter] = useState(initial.quarter);
+  const [period, setPeriod] = useState(`${initial.year}-Q${initial.quarter}`);
   const [file, setFile] = useState(null);
   const [dataCenters, setDataCenters] = useState([]);
   const [dataCenterId, setDataCenterId] = useState('');
@@ -39,6 +50,19 @@ const UploadForm = ({ defaultScope = 1, defaultPeriod = '2025-Q4', allowedScopes
       });
   }, []);
 
+  useEffect(() => {
+    setPeriod(`${year}-Q${quarter}`);
+  }, [year, quarter]);
+
+  const handlePeriodChange = (value) => {
+    setPeriod(value);
+    const match = value.match(/(\d{4})-Q([1-4])/);
+    if (match) {
+      setYear(match[1]);
+      setQuarter(match[2]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) return setError('Please choose a file');
@@ -66,13 +90,45 @@ const UploadForm = ({ defaultScope = 1, defaultPeriod = '2025-Q4', allowedScopes
     <Card>
       <CardContent>
         <Typography variant="h6">Upload data</Typography>
+        <Typography variant="body2" sx={{ mt: 1, opacity: 0.7 }}>
+          Manual trigger: pick the exact year and quarter you want to send with this upload (expected format: YYYY-Q#).
+        </Typography>
         <Box component="form" onSubmit={handleSubmit} display="flex" gap={2} flexWrap="wrap" alignItems="center" mt={2}>
           <TextField select label="Scope" value={scope} onChange={(e) => setScope(e.target.value)} sx={{ minWidth: 160 }}>
             {allowedScopes.includes(1) && <MenuItem value={1}>Scope 1</MenuItem>}
             {allowedScopes.includes(2) && <MenuItem value={2}>Scope 2</MenuItem>}
             {allowedScopes.includes(3) && <MenuItem value={3}>Scope 3</MenuItem>}
           </TextField>
-          <TextField label="Period" value={period} onChange={(e) => setPeriod(e.target.value)} sx={{ minWidth: 160 }} />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              label="Year"
+              type="number"
+              value={year}
+              onChange={(e) => setYear(e.target.value || '')}
+              sx={{ width: 120 }}
+              inputProps={{ min: 2000, max: 2100, placeholder: '2025' }}
+            />
+            <TextField
+              select
+              label="Quarter"
+              value={quarter}
+              onChange={(e) => setQuarter(e.target.value)}
+              sx={{ width: 140 }}
+            >
+              <MenuItem value="1">Q1 (Jan-Mar)</MenuItem>
+              <MenuItem value="2">Q2 (Apr-Jun)</MenuItem>
+              <MenuItem value="3">Q3 (Jul-Sep)</MenuItem>
+              <MenuItem value="4">Q4 (Oct-Dec)</MenuItem>
+            </TextField>
+          </Stack>
+          <TextField
+            label="Period (auto)"
+            value={period}
+            onChange={(e) => handlePeriodChange(e.target.value)}
+            sx={{ minWidth: 200 }}
+            placeholder="2025-Q1"
+            helperText="We expect YYYY-Q# (e.g., 2025-Q1). Adjust above if you need a different quarter."
+          />
           <TextField
             select
             label="Datacenter"
@@ -94,10 +150,7 @@ const UploadForm = ({ defaultScope = 1, defaultPeriod = '2025-Q4', allowedScopes
         {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
         {result && (
           <Box mt={3}>
-            <Typography variant="subtitle1">AI Summary</Typography>
-            <Typography variant="body2">{result.summary}</Typography>
-            <Typography variant="subtitle2" mt={2}>Structured data</Typography>
-            <pre style={{ background: '#0b1223', padding: 12, borderRadius: 8, overflow: 'auto' }}>{JSON.stringify(result.structured, null, 2)}</pre>
+            <Alert severity="success">Upload successful!</Alert>
           </Box>
         )}
       </CardContent>

@@ -61,7 +61,20 @@ const buildRouter = (upload) => {
         folderRef,
         sectionRef,
       });
-      await LedgerEvent.create({ type: 'UPLOAD', reportId: null, detail: `Scope ${scope} upload by ${req.user.email}` });
+      await LedgerEvent.create({
+        type: 'EMISSIONS_UPLOADED',
+        datacenter: dataCenterName,
+        period: period,
+        vendorId: req.user.role === 'vendor' ? req.user.id : undefined,
+        detail: `Scope ${scope} upload by ${req.user.email}`,
+        payload: {
+          scope: scopeNum,
+          dataCenterId: chosenDataCenterId,
+          dataCenterName,
+          file: req.file.filename,
+          section: sectionRef,
+        },
+      });
       res.json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });

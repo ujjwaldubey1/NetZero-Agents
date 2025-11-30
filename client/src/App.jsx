@@ -12,12 +12,15 @@ import StaffUploadPage from './pages/staff/StaffUploadPage';
 import InviteVendorsPage from './pages/operator/InviteVendorsPage';
 import ReportsPage from './pages/operator/ReportsPage';
 import CertificatePage from './pages/operator/CertificatePage';
+import OrchestratorAnalysisPage from './pages/operator/OrchestratorAnalysisPage';
 import ChainExplorerPage from './pages/ChainExplorerPage';
 import PrivacyPage from './pages/PrivacyPage';
 import StaffPage from './pages/staff/StaffPage';
 import DataCentersPage from './pages/operator/DataCentersPage';
 import NavBar from './components/NavBar';
 import { useAuth } from './context/AuthContext';
+import CustomCursor from './components/CustomCursor';
+import BootLoader from './components/BootLoader';
 
 const Protected = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -26,9 +29,6 @@ const Protected = ({ children, roles }) => {
   if (roles && !roles.includes(user.role)) return <Navigate to="/" />;
   return children;
 };
-
-import CustomCursor from './components/CustomCursor';
-import BootLoader from './components/BootLoader';
 
 const App = () => {
   const { user } = useAuth();
@@ -48,6 +48,7 @@ const App = () => {
           <Route path="/operator/vendors" element={<Protected roles={['operator', 'admin']}><InviteVendorsPage /></Protected>} />
           <Route path="/operator/datacenters" element={<Protected roles={['operator', 'admin']}><DataCentersPage /></Protected>} />
           <Route path="/operator/reports" element={<Protected roles={['operator', 'admin']}><ReportsPage /></Protected>} />
+          <Route path="/operator/orchestrator" element={<Protected roles={['operator', 'admin']}><OrchestratorAnalysisPage /></Protected>} />
           <Route path="/operator/certificates" element={<Protected roles={['operator', 'admin']}><CertificatePage /></Protected>} />
           <Route path="/operator/chain" element={<Protected roles={['operator', 'admin', 'staff', 'vendor']}><ChainExplorerPage /></Protected>} />
           <Route path="/operator/privacy" element={<Protected roles={['operator', 'admin', 'staff', 'vendor']}><PrivacyPage /></Protected>} />
