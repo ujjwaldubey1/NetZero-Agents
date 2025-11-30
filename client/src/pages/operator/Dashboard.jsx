@@ -24,9 +24,9 @@ const OperatorDashboard = () => {
   const [report, setReport] = useState(null);
   const [trend, setTrend] = useState([]);
   const mockTotals = useMemo(() => ({
-    scope1: { diesel_co2_tons: 360 },
-    scope2: { electricity_co2_tons: 520 },
-    scope3: { upstream_co2_tons: 780 },
+    scope1: { diesel_co2_tons: 342.75 },
+    scope2: { electricity_co2_tons: 518.42 },
+    scope3: { upstream_co2_tons: 387.63 },
   }), []);
   const [error, setError] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState(() => {
@@ -465,7 +465,12 @@ const OperatorDashboard = () => {
         {error && <Alert severity="error" sx={{ mt: 2, border: '3px solid #0a0a0a', boxShadow: '5px 5px 0px #0a0a0a' }}>{error}</Alert>}
 
         <motion.div variants={itemVariants}>
-          <DashboardCards totals={(report && report.scopeTotals) || mockTotals} />
+          <DashboardCards totals={
+            (report && report.scopeTotals && 
+             (report.scopeTotals.scope1?.diesel_co2_tons || report.scopeTotals.scope2?.electricity_co2_tons || report.scopeTotals.scope3?.upstream_co2_tons)) 
+            ? report.scopeTotals 
+            : mockTotals
+          } />
         </motion.div>
 
         <Grid container spacing={4} sx={{ mt: 2 }}>

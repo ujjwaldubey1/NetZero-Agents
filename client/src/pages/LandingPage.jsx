@@ -120,7 +120,7 @@ const CoverPage = () => {
         />
 
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          {/* Glitched CARDANO Title - Spider-Verse Style */}
+          {/* Glitched NETZERO Title - Spider-Verse Style */}
           <Box sx={{ position: 'relative', mb: 4 }}>
             {/* Main Title */}
             <Typography
@@ -135,7 +135,7 @@ const CoverPage = () => {
                 zIndex: 3,
               }}
             >
-              CARDANO
+              NETZERO
             </Typography>
 
             {/* Red Channel Offset */}
@@ -165,7 +165,7 @@ const CoverPage = () => {
                 },
               }}
             >
-              CARDANO
+              NETZERO
             </Typography>
 
             {/* Cyan Channel Offset */}
@@ -195,7 +195,7 @@ const CoverPage = () => {
                 },
               }}
             >
-              CARDANO
+              NETZERO
             </Typography>
 
             {/* Yellow Accent Offset */}
@@ -224,7 +224,7 @@ const CoverPage = () => {
                 },
               }}
             >
-              CARDANO
+              NETZERO
             </Typography>
           </Box>
 
@@ -258,7 +258,7 @@ const CoverPage = () => {
                 px: { xs: 2, md: 0 },
               }}
             >
-              Transforming data center carbon compliance from fragmented chaos into streamlined, blockchain-verified certainty.
+              AI-powered emissions analysis with multi-agent orchestration, cryptographic integrity proofs, and blockchain-certified compliance certificates—all in one unified platform.
             </Typography>
 
             {/* Scanline overlay */}
@@ -738,13 +738,13 @@ const LandingPage = () => {
                   UNIFIED PLATFORM
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  A unified compliance automation platform that collects and converts data from DCIM, PDFs, and Excel reports into a structured format.
+                  A unified compliance automation platform powered by AI multi-agent orchestration. Automatically analyzes Scope 1, 2, and 3 emissions using intelligent agents that extract, validate, and compare data across reporting periods.
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  Sends automated data requests to suppliers through a shared web portal. Uses AI to validate inputs, detect anomalies, and fill gaps.
+                  Generates blockchain-grade cryptographic proofs (SHA-256 report hashes and Merkle roots) to freeze and protect your compliance data. Stores all evidence on IPFS for permanent, tamper-proof audit trails.
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  Compiles a consolidated master emissions report aligned to global frameworks (GHG, CSRD, ISO 14064) and generates a verified compliance certificate, with every action recorded immutably on the Cardano blockchain.
+                  Mint verified compliance certificates on Masumi blockchain with complete transaction records. Every agent action, validation, and payment is immutably logged for regulatory trust and auditability.
                 </Typography>
               </MangaCard>
             </Grid>
@@ -752,10 +752,10 @@ const LandingPage = () => {
 
           <Grid container spacing={4}>
             {[
-              { title: 'END-TO-END AUTOMATION', desc: 'Across Scopes 1–3', color: '#00f0ff' },
-              { title: 'INTEGRATED VENDOR COLLAB', desc: 'No manual follow-ups', color: '#fcee0a' },
-              { title: 'AI-ASSISTED VERIFICATION', desc: 'Ensures accuracy and consistency', color: '#ff0055' },
-              { title: 'BLOCKCHAIN TRACEABILITY', desc: 'For audit and trust', color: '#0a0a0a', text: '#fff' },
+              { title: 'AI MULTI-AGENT SYSTEM', desc: 'Vendor, Staff & Carbon Credit agents run in parallel', color: '#00f0ff' },
+              { title: 'CRYPTOGRAPHIC PROOFS', desc: 'SHA-256 hashes & Merkle roots for data integrity', color: '#fcee0a' },
+              { title: 'MASUMI BLOCKCHAIN', desc: 'Immutable logging & certificate minting', color: '#ff0055' },
+              { title: 'IPFS STORAGE', desc: 'Decentralized evidence storage with Pinata', color: '#0a0a0a', text: '#fff' },
             ].map((item, i) => (
               <Grid item xs={12} md={6} key={i}>
                 <MangaCard
@@ -777,69 +777,69 @@ const LandingPage = () => {
           </Grid>
         </MangaChapter>
 
-        {/* CHAPTER 3: THE FEATURES */}
+        {/* CHAPTER 3: THE FOUR-PILLAR ARCHITECTURE */}
         <MangaChapter
           chapterNumber={3}
-          title="THE NINE PILLARS"
-          subtitle="Nine powerful features that transform compliance from chaos to clarity."
+          title="THE FOUR-PILLAR ARCHITECTURE"
+          subtitle="A revolutionary four-pillar system that combines AI intelligence, cryptographic integrity, blockchain auditability, and automated orchestration."
           bgColor="#f0f0f0"
         >
           <Grid container spacing={4} sx={{ mt: 2 }}>
             {[
               {
                 num: '01',
-                title: 'UNIFIED DATA INGESTION',
-                desc: 'Integrates data from multiple sources — DCIM systems, IoT meters, Excel sheets, and PDF reports — into a single structured database for Scope 1, 2, and 3 emissions.',
+                title: 'PILLAR 1: AI MULTI-AGENT SYSTEM',
+                desc: 'Intelligent agents powered by Gemini AI orchestrate comprehensive analysis. Vendor Agent analyzes Scope 3 emissions, Carbon Credits Agent calculates compliance thresholds, and Staff Agents evaluate Scope 1 & 2. All agents run in parallel, detect anomalies, and generate evidence-based insights.',
                 color: '#00f0ff',
               },
               {
                 num: '02',
-                title: 'AUTOMATED VENDOR COLLABORATION',
-                desc: 'Automatically sends secure data entry links to suppliers and vendors, allowing them to upload Scope 3 information through a standardized web interface.',
+                title: 'PILLAR 2: INTEGRITY LAYER',
+                desc: 'Cryptographic proofs ensure tamper-proof data integrity. SHA-256 report hashes freeze the entire dataset, while Merkle trees create evidence roots that allow partial verification. Every evidence item is individually hashed and cryptographically secured.',
                 color: '#fcee0a',
               },
               {
                 num: '03',
-                title: 'AI-BASED DATA EXTRACTION',
-                desc: 'Uses AI models to extract key emissions data from uploaded files, verify accuracy, flag inconsistencies, and fill missing fields with relevant emission factors.',
+                title: 'PILLAR 3: MASUMI BLOCKCHAIN',
+                desc: 'Masumi decentralized AI protocol provides on-chain identity for each agent, immutable decision logging for every analysis step, and automated micropayment settlement. All transactions are logged on-chain for complete auditability.',
                 color: '#ff0055',
               },
               {
                 num: '04',
-                title: 'CENTRALIZED COMPLIANCE ENGINE',
-                desc: 'Aggregates all validated data into a master emissions database aligned with international frameworks such as GHG Protocol, CSRD, and ISO 14064.',
+                title: 'PILLAR 4: MASTER AGENT',
+                desc: 'The Master Orchestrator aggregates all agent results, generates human-readable final reports, triggers IPFS uploads for permanent storage, and coordinates certificate minting. Complete end-to-end automation from data collection to blockchain certification.',
                 color: '#0a0a0a',
                 text: '#fff',
               },
               {
                 num: '05',
-                title: 'MASTER REPORT GENERATION',
-                desc: 'Automatically compiles a unified, audit-ready compliance report that consolidates all Scopes and vendor inputs, complete with insights and visual summaries.',
+                title: 'FILE UPLOAD SYSTEM',
+                desc: 'Role-based block storage system for organized file management. Staff upload Scope 1 & 2 files (PDF, Excel) with automatic folder structure. Vendors upload Scope 3 files (PDF, Excel, CSV, ZIP, Images) with full metadata tracking.',
                 color: '#00f0ff',
               },
               {
                 num: '06',
-                title: 'CERTIFICATE OF EMISSIONS',
-                desc: 'Generates a digitally signed Certificate of Emission that reflects verified totals and compliance status for the reporting period.',
+                title: 'COMPLIANCE LOG VIEWER',
+                desc: 'Comprehensive compliance logs table showing all reporting periods with status (PENDING, ANALYZED, FROZEN, MINTED), scope values formatted to 2 decimals, and detailed report viewing with full evidence, narratives, and cryptographic proofs.',
                 color: '#fcee0a',
               },
               {
                 num: '07',
-                title: 'BLOCKCHAIN AUDIT TRAIL',
-                desc: 'Stores every key event — uploads, validations, approvals, and certificate issuance — on the Cardano blockchain for immutable auditability and regulatory trust.',
+                title: 'CERTIFICATE MINTING',
+                desc: 'Mint blockchain-certified compliance certificates on Masumi network. Each certificate includes report hash, Merkle root, evidence hashes, IPFS bundle links, and transaction details. Certificates are stored with complete blockchain metadata for verification.',
                 color: '#ff0055',
               },
               {
                 num: '08',
-                title: 'REAL-TIME MONITORING',
-                desc: 'Provides a live overview of emissions trends, data completeness, and compliance readiness with drill-down capability for internal and regulatory audits.',
+                title: 'IPFS DECENTRALIZED STORAGE',
+                desc: 'All reports and evidence packages are uploaded to IPFS via Pinata gateway for permanent, decentralized storage. Gateway URLs provided for easy access and sharing. Complete audit trail with IPFS CIDs.',
                 color: '#0a0a0a',
                 text: '#fff',
               },
               {
                 num: '09',
-                title: 'MODULAR INTEGRATION',
-                desc: 'Built with flexibility to connect to IBM Watsonx, Maximo, and other enterprise systems for analytics, predictive insights, or external compliance submission.',
+                title: 'REAL-TIME ANALYTICS',
+                desc: 'Live dashboard with emissions trends, anomaly detection, compliance status, and drill-down capabilities. UI-ready payloads formatted for charts, timelines, tables, and visualizations. Complete transparency and monitoring.',
                 color: '#00f0ff',
               },
             ].map((feature, i) => (
@@ -894,28 +894,28 @@ const LandingPage = () => {
               },
               {
                 category: 'BACKEND / AI',
-                tech: ['Node.js API Gateway', 'IBM watsonx (LLM/NLP)', 'Python Workers (OCR)', 'Validation Rules Engine'],
+                tech: ['Node.js/Express API', 'Gemini AI (LangChain)', 'Multi-Agent Orchestration', 'Cryptographic Hashing & Merkle Trees'],
                 color: '#fcee0a',
                 icon: '🤖',
               },
               {
-                category: 'DATA & INTEGRATIONS',
-                tech: ['PostgreSQL / TimescaleDB', 'IBM Cloud Object Storage / IPFS', 'DCIM/IoT Connectors', 'Kafka/Redis Message Bus'],
+                category: 'DATA & STORAGE',
+                tech: ['MongoDB Database', 'IPFS (Pinata Gateway)', 'Block Storage System', 'Organized File Management'],
                 color: '#ff0055',
                 icon: '💾',
               },
               {
-                category: 'BLOCKCHAIN & IDENTITY',
-                tech: ['Cardano Mainnet', 'Aiken/Plutus Smart Contracts', 'Atala PRISM DID', 'Midnight Privacy Sidechain'],
+                category: 'BLOCKCHAIN & INTEGRITY',
+                tech: ['Masumi Blockchain', 'Agent Identity Registration', 'Immutable Decision Logging', 'Certificate Minting'],
                 color: '#0a0a0a',
                 text: '#fff',
                 icon: '⛓️',
               },
               {
-                category: 'DEVOPS & SECURITY',
-                tech: ['Docker, GitHub Actions', 'Terraform IaC', 'KMS/HSM Key Custody', 'End-to-End Encryption'],
+                category: 'FRONTEND & UI',
+                tech: ['React + Vite', 'Material-UI Components', 'Framer Motion Animations', 'Responsive Dashboard'],
                 color: '#00f0ff',
-                icon: '🔒',
+                icon: '🎨',
               },
             ].map((stack, i) => (
               <Grid item xs={12} md={6} key={i}>
@@ -951,11 +951,11 @@ const LandingPage = () => {
           </Grid>
         </MangaChapter>
 
-        {/* CHAPTER 5: CARDANO INTEGRATION */}
+        {/* CHAPTER 5: MASUMI BLOCKCHAIN INTEGRATION */}
         <MangaChapter
           chapterNumber={5}
-          title="CARDANO: THE IMMUTABLE FOUNDATION"
-          subtitle="Creating an immutable, publicly verifiable compliance trail and emission certificate on Cardano blockchain."
+          title="MASUMI: THE DECENTRALIZED AI FOUNDATION"
+          subtitle="Creating an immutable, publicly verifiable compliance trail with agent identity, decision logging, and automated certificate minting."
           bgColor="#0a0a0a"
           textColor="#ffffff"
         >
@@ -966,19 +966,19 @@ const LandingPage = () => {
                   WHAT WE RECORD
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  <strong>Certificate NFT</strong> (non-transferable) for each reporting period/entity:
+                  <strong>Certificate Metadata</strong> for each reporting period:
                 </Typography>
                 <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Period, org_did, scope totals, method/factor versions</Typography></li>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Report SHA256, evidence merkle root</Typography></li>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Midnight proof IDs (links to private ZK proofs)</Typography></li>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Issuer/verifier DIDs, timestamps</Typography></li>
+                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Report hash (SHA-256), Merkle root, evidence hashes</Typography></li>
+                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Datacenter, period, job ID, timestamps</Typography></li>
+                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>IPFS bundle links for report and evidence</Typography></li>
+                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>Masumi transaction count and network info</Typography></li>
                 </Box>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif', mt: 2 }}>
-                  <strong>Workflow events:</strong> Dataset frozen, approvals, vendor attestations
+                  <strong>Agent Activities:</strong> Identity registration, decision logging, analysis completion, payment settlement
                 </Typography>
                 <Typography variant="body1" sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  <strong>Revocation/Replace:</strong> On detected errors, link old→new with reason hash
+                  <strong>Block Information:</strong> Block number, block hash, block timestamp for complete audit trail
                 </Typography>
               </MangaCard>
             </Grid>
@@ -988,18 +988,16 @@ const LandingPage = () => {
                   WHEN WE WRITE
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  <strong>1. After AI validation and human sign-off:</strong> We freeze the quarter's dataset and compute report_sha256, evidence_merkle_root, factor_pack_id
+                  <strong>1. Agent Registration:</strong> Each agent (Vendor, Staff, Carbon Credits, Master) registers on-chain with unique identity and capabilities.
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  <strong>2. Smart Contracts:</strong>
+                  <strong>2. Decision Logging:</strong> Every agent action—analysis completion, anomaly detection, report generation—is logged with timestamps and metadata.
                 </Typography>
-                <Box component="ul" sx={{ pl: 3, mb: 2 }}>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>issueCertificate(snapshotHash, reportHash, merkleRoot, meta, midnightRefs)</Typography></li>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>attest(certId, attestorDID, role, statementHash)</Typography></li>
-                  <li><Typography variant="body1" sx={{ fontSize: '1.1rem', fontFamily: '"Space Grotesk", sans-serif' }}>revokeAndReplace(certId, newCertId, reasonHash)</Typography></li>
-                </Box>
+                <Typography variant="body1" paragraph sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
+                  <strong>3. Certificate Minting:</strong> After cryptographic proofs are generated, certificates are minted with complete metadata including report hash, Merkle root, and IPFS links.
+                </Typography>
                 <Typography variant="body1" sx={{ fontSize: '1.2rem', fontFamily: '"Space Grotesk", sans-serif' }}>
-                  <strong>3. Frontend shows a "View on Chain" link</strong> for auditors/clients.
+                  <strong>4. Payment Settlement:</strong> Automated micropayments to agents based on work performed, all logged on-chain for transparency.
                 </Typography>
               </MangaCard>
             </Grid>
@@ -1007,31 +1005,31 @@ const LandingPage = () => {
 
           <MangaCard variant="rect" bgColor="#00f0ff" borderColor="#0a0a0a" shadowColor="#0a0a0a">
             <Typography variant="h3" gutterBottom sx={{ fontFamily: '"Bebas Neue", sans-serif', mb: 3, color: '#0a0a0a' }}>
-              WHY CARDANO?
+              WHY MASUMI?
             </Typography>
             <Grid container spacing={4}>
               <Grid item xs={12} md={4}>
                 <Typography variant="h5" gutterBottom sx={{ fontFamily: '"Bebas Neue", sans-serif', color: '#0a0a0a' }}>
-                  LOW-COST & LOW-ENERGY
+                  DECENTRALIZED AI PROTOCOL
                 </Typography>
                 <Typography variant="body1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1.1rem', color: '#0a0a0a' }}>
-                  L1 aligns with ESG goals. Sustainable blockchain for sustainable reporting.
+                  Built for AI agent coordination with native support for identity, logging, and micropayments.
                 </Typography>
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="h5" gutterBottom sx={{ fontFamily: '"Bebas Neue", sans-serif', color: '#0a0a0a' }}>
-                  MATURE UTXO MODEL
+                  IMMUTABLE AUDIT TRAIL
                 </Typography>
                 <Typography variant="body1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1.1rem', color: '#0a0a0a' }}>
-                  Deterministic compliance records. Predictable transaction outcomes.
+                  Every agent decision and action is permanently recorded on-chain for regulatory compliance and trust.
                 </Typography>
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="h5" gutterBottom sx={{ fontFamily: '"Bebas Neue", sans-serif', color: '#0a0a0a' }}>
-                  DID SUPPORT
+                  AUTOMATED SETTLEMENTS
                 </Typography>
                 <Typography variant="body1" sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1.1rem', color: '#0a0a0a' }}>
-                  Atala PRISM for device/org identity. Self-sovereign identity for compliance.
+                  Smart payment routing ensures agents are automatically rewarded for their contributions to the analysis.
                 </Typography>
               </Grid>
             </Grid>
@@ -1069,9 +1067,9 @@ const LandingPage = () => {
                 image: BUG_IMG,
               },
               {
-                title: 'CARDANO',
-                subtitle: 'ON-CHAIN LEDGER',
-                desc: 'Freezes your reports in time on-chain for trust that sticks. Immutable proof. Permanent audit trail.',
+                title: 'MASUMI BLOCKCHAIN',
+                subtitle: 'DECENTRALIZED AI',
+                desc: 'Immutable agent logging and certificate minting on Masumi network. Complete audit trail with transaction records and block information.',
                 color: '#0a0a0a',
                 text: '#fff',
                 image: HERO_IMG,
