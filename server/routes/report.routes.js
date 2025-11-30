@@ -12,10 +12,47 @@ import crypto from 'crypto';
 
 const router = express.Router();
 
+import { getComplianceTable, getPeriodDetailsView, getPeriodNarrativeView } from '../controllers/complianceLog.controller.js';
+
 router.get('/current', authRequired, roleRequired('operator'), getCurrentReport);
 router.post('/freeze', authRequired, roleRequired('operator'), freezeReportHandler);
 router.post('/generate-narrative', authRequired, roleRequired('operator'), generateNarrative);
-router.get('/', authRequired, roleRequired('operator'), getAllReports);
+
+// ===========================================================
+// COMPLIANCE LOG POPULATION & REPORT VIEWER AGENT ROUTES
+// ===========================================================
+
+/**
+ * GET /api/reports?datacenter=<dc>
+ * Get compliance log table rows and view payloads for a datacenter
+ * Returns: { tableRows: [...], viewPayloads: {...} }
+ * 
+ * If datacenter query param is provided, use compliance log endpoint
+ * Otherwise, use the original getAllReports
+ */
+router.get('/', authRequired, roleRequired('operator'), async (req, res) => {
+  if (req.query.datacenter) {
+    return getComplianceTable(req, res);
+  }
+  return getAllReports(req, res);
+});
+
+/**
+ * GET /api/reports/:period/details?datacenter=<dc>
+ * Get detailed view payload for a specific period
+ */
+router.get('/:period/details', authRequired, roleRequired('operator'), getPeriodDetailsView);
+
+/**
+ * GET /api/reports/:period/narrative?datacenter=<dc>
+ * Get narrative for a specific period
+ */
+router.get('/:period/narrative', authRequired, roleRequired('operator'), getPeriodNarrativeView);
+
+/**
+ * GET /api/reports/:reportId
+ * Get report by ID (must come after /:period routes to avoid conflicts)
+ */
 router.get('/:reportId', authRequired, roleRequired('operator'), getReport);
 
 /**

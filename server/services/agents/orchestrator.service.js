@@ -529,6 +529,7 @@ export const orchestrateAnalysis = async (datacenterName, period) => {
     return {
       status: 'success',
       success: true,
+      jobId: jobId,
       datacenter: datacenterName,
       period: normalizedPeriod,
       vendors_summary: vendorsResult,
