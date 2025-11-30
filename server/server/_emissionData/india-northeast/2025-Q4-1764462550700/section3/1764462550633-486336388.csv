@@ -1,0 +1,11 @@
+Emission Source,Emission Category,Quantity (tons CO2e)
+Purchased Goods,Indirect Upstream,451.83
+Cloud Upstream,Indirect Downstream,12.42
+Transportation & Distribution,Indirect Upstream,317.48
+Waste Disposal,Indirect Downstream,255.65
+Purchased Goods,Indirect Downstream,462.32
+Cloud Upstream,Indirect Downstream,35.57
+Transportation & Distribution,Indirect Upstream,413.95
+Employee Commute,Indirect Downstream,49.67
+Transportation & Distribution,Indirect Downstream,148.01
+Purchased Goods,Indirect Downstream,213.42

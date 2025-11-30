@@ -33,7 +33,8 @@ router.get('/current', authRequired, roleRequired('operator'), async (req, res) 
   const scopeTotals = computeTotals(records);
   let report = await Report.findOne({ ownerId: req.user.id, period });
   if (!report) {
-    report = new Report({ ownerId: req.user.id, period, scopeTotals, details: { records }, status: 'draft' });
+    // Use 'pending' status (valid enum value) instead of 'draft'
+    report = new Report({ ownerId: req.user.id, period, scopeTotals, details: { records }, status: 'pending' });
   } else {
     report.scopeTotals = scopeTotals;
     report.details = { records };
@@ -47,7 +48,8 @@ router.post('/freeze', authRequired, roleRequired('operator'), async (req, res) 
   const { period } = req.body;
   const report = await Report.findOne({ ownerId: req.user.id, period });
   if (!report) return res.status(404).json({ error: 'Report not found' });
-  report.status = 'frozen';
+  // Use 'validated' status (mapped from 'frozen' for backwards compatibility)
+  report.status = 'validated';
   report.updatedAt = new Date();
   await report.save();
   await LedgerEvent.create({ type: 'REPORT_FROZEN', reportId: report._id, detail: `Report frozen ${period}` });

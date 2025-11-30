@@ -349,6 +349,17 @@ export const isMasumiEnabled = () => {
   return enabled;
 };
 
+/**
+ * Get current Masumi configuration from environment variables.
+ * This ensures the latest values are always read.
+ */
+export const getMasumiConfig = () => ({
+  apiUrl: process.env.MASUMI_API_URL || 'https://api.masumi.network/v1',
+  networkId: process.env.MASUMI_NETWORK_ID || 'masumi-testnet',
+  masterWallet: process.env.MASUMI_MASTER_WALLET || null,
+  enabled: process.env.MASUMI_ENABLED === 'true',
+});
+
 export default {
   registerAgentIdentity,
   logDecision,
@@ -357,5 +368,6 @@ export default {
   registerAllAgents,
   getAgentIdentities,
   isMasumiEnabled,
+  getMasumiConfig,
 };
 

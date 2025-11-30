@@ -24,8 +24,13 @@ export const mintReport = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
     
-    if (report.status !== 'frozen') {
-      return res.status(400).json({ error: 'Report must be frozen before minting' });
+    // Accept both 'validated' (new model) and 'frozen' (legacy) statuses
+    if (report.status !== 'validated' && report.status !== 'frozen') {
+      return res.status(400).json({ 
+        error: 'Report must be validated or frozen before minting',
+        currentStatus: report.status,
+        validStatuses: ['validated', 'frozen']
+      });
     }
     
     const reportHash = hashReport(report.toObject());

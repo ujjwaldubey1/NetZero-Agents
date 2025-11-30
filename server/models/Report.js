@@ -147,8 +147,16 @@ ReportSchema.statics.findByStatus = function (status) {
 // Pre-save hook to validate data consistency
 ReportSchema.pre('save', function (next) {
   // Ensure status progression is logical
-  if (this.status === 'minted' && !this.blockchainTx) {
-    return next(new Error('Cannot set status to minted without blockchain transaction hash'));
+  if (this.status === 'minted') {
+    // Allow fallback values like certificate ID if blockchain transaction is not available
+    // This handles cases where Cardano minting failed but certificate was still created
+    if (!this.blockchainTx || this.blockchainTx.trim() === '') {
+      // Only throw error if we're actually trying to set to minted
+      // Allow empty/null blockchainTx for other statuses
+      if (this.isModified('status')) {
+        return next(new Error('Cannot set status to minted without blockchain transaction hash. Please set report.blockchainTx first.'));
+      }
+    }
   }
   next();
 });
