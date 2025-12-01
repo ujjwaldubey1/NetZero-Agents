@@ -148,3 +148,4 @@ const extractScope3Total = (data) => {
   return allValues.length > 0 ? allValues.reduce((sum, v) => sum + v, 0) : 0;
 };
 
+

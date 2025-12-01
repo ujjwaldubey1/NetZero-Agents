@@ -58,3 +58,4 @@ export const createCIP68AssetName = (prefix = '000de140') => {
   return prefix + timestamp;
 };
 
+

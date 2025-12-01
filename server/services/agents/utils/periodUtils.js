@@ -154,3 +154,4 @@ export const detectAnomalies = (current, previous = null, historicalValues = [])
   return anomalies;
 };
 
+

@@ -91,3 +91,4 @@ const VendorAnalysisTable = ({ vendors }) => {
 
 export default VendorAnalysisTable;
 
+

@@ -42,3 +42,4 @@ export const generateProof = async ({ value, threshold }) => {
   };
 };
 
+

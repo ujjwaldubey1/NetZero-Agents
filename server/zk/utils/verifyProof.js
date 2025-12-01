@@ -26,3 +26,4 @@ export const verifyProof = async ({ proof, publicSignals }) => {
   return isValid;
 };
 
+

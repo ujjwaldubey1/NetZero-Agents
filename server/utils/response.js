@@ -27,3 +27,4 @@ export const paginated = (res, data, pagination, message = 'Success') => {
   });
 };
 
+

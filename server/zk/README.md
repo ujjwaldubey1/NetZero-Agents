@@ -31,3 +31,4 @@ const { proof, publicSignals } = await generateProof({
 const isValid = await verifyProof({ proof, publicSignals });
 ```
 
+

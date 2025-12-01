@@ -111,3 +111,4 @@ const combineHashes = (hash1, hash2) => {
   return crypto.createHash('sha256').update(hash1 + hash2).digest('hex');
 };
 
+

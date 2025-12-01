@@ -41,3 +41,4 @@ export const parseExcelToJson = (filePath, sheetIndex = 0) => {
   return xlsx.utils.sheet_to_json(sheet);
 };
 
+

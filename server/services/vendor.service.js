@@ -115,3 +115,4 @@ export const onboardVendor = async ({ token, password }) => {
   return { userId: user._id, email: user.email, vendorName: user.vendorName };
 };
 
+
