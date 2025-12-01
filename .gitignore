@@ -1,9 +1,17 @@
 node_modules
 server/uploads
 server/zk/*.zkey
- server/zk/*.r1cs
- server/zk/*.wasm
- server/zk/*.ptau
- server/zk/verification_key.json
- .env
+server/zk/*.r1cs
+server/zk/*.wasm
+server/zk/*.ptau
+server/zk/verification_key.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env
+*.env
+
 client/dist
